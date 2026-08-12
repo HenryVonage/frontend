@@ -138,6 +138,63 @@
     border-radius: 999px;
     margin-bottom: 18px;
   }
+  .demo-info {
+    margin-bottom: 20px;
+    padding: 16px 18px;
+    border-radius: 10px;
+    background: #f6f8fd;
+    border: 1px solid #e2e8f7;
+  }
+  .demo-info .channel-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+  .demo-info .channel-tag.whatsapp { background: #dcfce7; color: #15803d; }
+  .demo-info .channel-tag.rcs { background: #dbeafe; color: #1d4ed8; }
+  .demo-info p {
+    margin: 0 0 10px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .demo-info ul {
+    margin: 0 0 10px;
+    padding-left: 18px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .demo-info .stack-note {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px dashed #d7dce6;
+    padding-top: 10px;
+  }
+  .arch-card {
+    margin-top: 24px;
+    background: var(--card);
+    border-radius: 14px;
+    padding: 22px 24px;
+    box-shadow: 0 1px 3px rgba(16, 37, 77, 0.08), 0 8px 24px rgba(16, 37, 77, 0.06);
+  }
+  .arch-card h2 {
+    font-size: 15px;
+    margin: 0 0 4px;
+    color: var(--navy-dark);
+  }
+  .arch-card .arch-caption {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+  .arch-card svg { width: 100%; height: auto; display: block; }
 </style>
 </head>
 <body>
@@ -152,8 +209,8 @@
 
 <main>
   <span class="demo-badge">Demo Portfolio</span>
-  <h1>Try a live demo on WhatsApp</h1>
-  <p class="lead">Enter your first name, pick a demo, and scan the QR code (or tap the button on mobile) to start a WhatsApp conversation with it.</p>
+  <h1>Try a live demo</h1>
+  <p class="lead">Enter your first name, pick a demo and channel, and scan the QR code (or tap the button on mobile) to start a conversation with it.</p>
 
   <div class="card">
     <label for="firstName">Your first name</label>
@@ -162,36 +219,122 @@
     <label for="demoSelect">Choose a demo</label>
     <select id="demoSelect"></select>
 
+    <div id="demoInfo" class="demo-info"></div>
+
     <button id="generateBtn" onclick="generateQr()">Generate my QR code</button>
 
     <div id="result">
       <div id="qrcode"></div>
       <div>
-        <a id="openLink" class="open-btn" href="#" target="_blank" rel="noopener">Open in WhatsApp</a>
+        <a id="openLink" class="open-btn" href="#" target="_blank" rel="noopener">Open</a>
       </div>
       <div id="rawLink" class="raw-link"></div>
+      <div id="channelNote" class="raw-link" style="background:none;padding:0;margin-top:10px;"></div>
     </div>
   </div>
 
   <p class="note">More demos are on the way — this picker is built to grow into a full portfolio.</p>
+
+  <div class="arch-card">
+    <h2>How this demo is built</h2>
+    <p class="arch-caption" id="archCaption">Both demos share the same underlying stack — only the messaging channel and voice leg differ.</p>
+    <svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Architecture diagram">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#8b96ad"></path>
+        </marker>
+      </defs>
+      <!-- Text/chat flow -->
+      <rect x="10" y="20" width="120" height="50" rx="8" fill="#eef2fb" stroke="#c7d2ee"></rect>
+      <text x="70" y="40" text-anchor="middle" font-size="11" font-weight="700" fill="#10254d">Visitor</text>
+      <text x="70" y="55" text-anchor="middle" font-size="10" fill="#6b7280" id="archChannelIcon">WhatsApp chat</text>
+
+      <line x1="130" y1="45" x2="185" y2="45" stroke="#8b96ad" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+      <rect x="185" y="20" width="150" height="50" rx="8" fill="#eef2fb" stroke="#c7d2ee"></rect>
+      <text x="260" y="40" text-anchor="middle" font-size="11" font-weight="700" fill="#10254d">Vonage Messages API</text>
+      <text x="260" y="55" text-anchor="middle" font-size="10" fill="#6b7280" id="archChannelLabel">WhatsApp Business</text>
+
+      <line x1="335" y1="45" x2="400" y2="45" stroke="#8b96ad" stroke-width="1.5" marker-end="url(#arrow)"></line>
+      <line x1="400" y1="55" x2="335" y2="55" stroke="#8b96ad" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+      <rect x="400" y="10" width="150" height="70" rx="8" fill="#e9e3fb" stroke="#cabdf0"></rect>
+      <text x="475" y="35" text-anchor="middle" font-size="11" font-weight="700" fill="#3d2c85">Claude AI</text>
+      <text x="475" y="50" text-anchor="middle" font-size="10" fill="#5b4a99">Decision engine</text>
+      <text x="475" y="64" text-anchor="middle" font-size="10" fill="#5b4a99">(conversation logic)</text>
+
+      <!-- Voice flow -->
+      <rect x="10" y="150" width="120" height="50" rx="8" fill="#eef2fb" stroke="#c7d2ee"></rect>
+      <text x="70" y="170" text-anchor="middle" font-size="11" font-weight="700" fill="#10254d">Caller</text>
+      <text x="70" y="185" text-anchor="middle" font-size="10" fill="#6b7280" id="archVoiceIcon">WhatsApp Calling</text>
+
+      <line x1="130" y1="175" x2="185" y2="175" stroke="#8b96ad" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+      <rect x="185" y="150" width="150" height="50" rx="8" fill="#eef2fb" stroke="#c7d2ee"></rect>
+      <text x="260" y="170" text-anchor="middle" font-size="11" font-weight="700" fill="#10254d">Vonage Voice API</text>
+      <text x="260" y="185" text-anchor="middle" font-size="10" fill="#6b7280" id="archVoiceLabel">Realtime NCCO bridge</text>
+
+      <line x1="335" y1="175" x2="400" y2="175" stroke="#8b96ad" stroke-width="1.5" marker-end="url(#arrow)"></line>
+
+      <rect x="400" y="150" width="150" height="50" rx="8" fill="#fdeaea" stroke="#f3c6c6"></rect>
+      <text x="475" y="170" text-anchor="middle" font-size="11" font-weight="700" fill="#8a1f1f">ElevenLabs</text>
+      <text x="475" y="185" text-anchor="middle" font-size="10" fill="#a13939">Conversational AI (voice)</text>
+
+      <line x1="475" y1="150" x2="475" y2="82" stroke="#8b96ad" stroke-width="1.5" stroke-dasharray="3,3" marker-end="url(#arrow)"></line>
+      <text x="490" y="115" font-size="9" fill="#8b96ad">shares Claude</text>
+      <text x="490" y="126" font-size="9" fill="#8b96ad">as its LLM</text>
+
+      <rect x="560" y="30" width="70" height="200" rx="8" fill="#f8f9fc" stroke="#e2e8f7" stroke-dasharray="2,3"></rect>
+      <text x="595" y="120" text-anchor="middle" font-size="9" fill="#9aa4b8" transform="rotate(90 595 120)">Reply / recap sent back</text>
+      <line x1="550" y1="45" x2="560" y2="90" stroke="#8b96ad" stroke-width="1" marker-end="url(#arrow)"></line>
+      <line x1="550" y1="175" x2="560" y2="170" stroke="#8b96ad" stroke-width="1" marker-end="url(#arrow)"></line>
+    </svg>
+  </div>
 </main>
 
 <script>
-  // Portfolio of demos. Add a new entry here (and get its WABA number +
-  // greeting template approved as/if needed) to add it to the picker —
-  // no other page changes required.
+  // Portfolio of demos. Add a new entry here to add it to the picker — no
+  // other page changes required, as long as the entry's channel is either
+  // 'whatsapp' (needs wabaNumber, approved greeting template) or 'rcs'
+  // (needs rcsServiceId + botName, from the RBM agent's deep-link config).
   const DEMOS = [
     {
       id: 'henry-real-estate',
-      label: "Henry's Real Estate",
+      label: "Henry's Real Estate (WhatsApp)",
+      channel: 'whatsapp',
       wabaNumber: '447520691413', // Vonage Estate WABA
       greeting: (name) => `Hi, I'm ${name} — Welcome to Henry's Real Estate demo!`,
+      description: 'This demo is built to cover the breadth of the WhatsApp Business API — including the latest feature, WhatsApp Calling, where the AI agent can call you directly inside WhatsApp.',
+      highlights: [
+        'Rich message templates (image, video & document headers)',
+        'Interactive list & quick-reply buttons, product catalog',
+        'WhatsApp Calling — voice call placed inside WhatsApp itself',
+        'Post-call recap sent back as a WhatsApp document template',
+      ],
+    },
+    {
+      id: 'henry-real-estate-rcs',
+      label: "Henry's Real Estate (RCS)",
+      channel: 'rcs',
+      rcsServiceId: 'henry_rcs_demo3_byrrgzuw_agent@rbm.goog',
+      botName: 'Vonage RCS Demo-Henry',
+      greeting: (name) => `Hi, I'm ${name} — Welcome to Henry's Real Estate demo!`,
+      description: 'This demo is built to cover the breadth of RCS Business Messaging — rich cards, suggestion chips and native actions — plus voice escalation to a real PSTN phone call for a richer conversation.',
+      highlights: [
+        'Rich cards with images and tappable suggestion chips',
+        'Native actions: dial, view/share location — no template approval needed',
+        'PSTN Voice escalation — a real phone call to the same AI agent',
+        'Post-call recap & booking confirmation sent back over RCS',
+      ],
     },
     // {
     //   id: 'next-demo-id',
     //   label: 'Next Demo Name',
-    //   wabaNumber: '4479...',
+    //   channel: 'whatsapp' | 'rcs',
+    //   ...channel-specific fields above,
     //   greeting: (name) => `Hi, I'm ${name} — Welcome to <Next Demo> demo!`,
+    //   description: '...',
+    //   highlights: ['...'],
     // },
   ];
 
@@ -202,6 +345,68 @@
     opt.textContent = demo.label;
     select.appendChild(opt);
   });
+
+  const CHANNEL_LABELS = {
+    whatsapp: { open: 'Open in WhatsApp', note: 'Scan with your phone’s camera, or tap Open on mobile, to launch WhatsApp with this chat pre-filled.' },
+    rcs: { open: 'Open in Messages', note: 'Scan with your phone’s camera, or tap Open on mobile, to launch RCS chat (Google Messages / supported RCS app) with this chat pre-filled.' },
+  };
+
+  // Builds the launch URL for a demo + name. WhatsApp uses the standard
+  // wa.me deep link. RCS uses the sms: deep link format Google's RBM spec
+  // expects (RCC.07) — service_id as the recipient, plus bot-name and body
+  // query params. Must stay inside a clickable link/QR: browsers block
+  // typing/pasting sms: URIs directly for security reasons.
+  function buildLaunchUrl(demo, name) {
+    const text = demo.greeting(name);
+    if (demo.channel === 'rcs') {
+      return `sms:${encodeURIComponent(demo.rcsServiceId)}?bot-name=${encodeURIComponent(demo.botName)}&body=${encodeURIComponent(text)}`;
+    }
+    return `https://wa.me/${demo.wabaNumber}?text=${encodeURIComponent(text)}`;
+  }
+
+  const ARCH_TEXT = {
+    whatsapp: {
+      caption: "This demo's text flow runs over WhatsApp Business, its voice flow over WhatsApp Calling — both orchestrated by Claude AI, with ElevenLabs powering the call.",
+      channelIcon: 'WhatsApp chat',
+      channelLabel: 'WhatsApp Business',
+      voiceIcon: 'WhatsApp Calling',
+      voiceLabel: 'Realtime NCCO bridge',
+    },
+    rcs: {
+      caption: "This demo's text flow runs over RCS Business Messaging, escalating to a real PSTN call — both orchestrated by Claude AI, with ElevenLabs powering the call.",
+      channelIcon: 'RCS chat',
+      channelLabel: 'RCS Business Messaging',
+      voiceIcon: 'PSTN phone call',
+      voiceLabel: 'Realtime NCCO bridge',
+    },
+  };
+
+  // Renders the "what you're about to test" panel and updates the shared
+  // architecture diagram's labels for the selected demo's channel. Runs on
+  // page load and every time the demo picker changes — independent of
+  // whether a QR code has been generated yet.
+  function updateDemoInfo() {
+    const demo = DEMOS.find((d) => d.id === select.value) || DEMOS[0];
+    const channelLabel = demo.channel === 'rcs' ? 'RCS' : 'WhatsApp';
+
+    const info = document.getElementById('demoInfo');
+    info.innerHTML = `
+      <span class="channel-tag ${demo.channel}">${channelLabel}</span>
+      <p>${demo.description}</p>
+      <ul>${demo.highlights.map((h) => `<li>${h}</li>`).join('')}</ul>
+      <p class="stack-note">Built on Vonage's Messages &amp; Voice APIs, orchestrated by Claude AI, with ElevenLabs Conversational AI powering the voice call.</p>
+    `;
+
+    const arch = ARCH_TEXT[demo.channel] || ARCH_TEXT.whatsapp;
+    document.getElementById('archCaption').textContent = arch.caption;
+    document.getElementById('archChannelIcon').textContent = arch.channelIcon;
+    document.getElementById('archChannelLabel').textContent = arch.channelLabel;
+    document.getElementById('archVoiceIcon').textContent = arch.voiceIcon;
+    document.getElementById('archVoiceLabel').textContent = arch.voiceLabel;
+  }
+
+  select.addEventListener('change', updateDemoInfo);
+  updateDemoInfo();
 
   let qr = null;
 
@@ -216,15 +421,18 @@
     nameInput.style.borderColor = '';
 
     const demo = DEMOS.find((d) => d.id === select.value);
-    const text = demo.greeting(name);
-    const url = `https://wa.me/${demo.wabaNumber}?text=${encodeURIComponent(text)}`;
+    const url = buildLaunchUrl(demo, name);
+    const labels = CHANNEL_LABELS[demo.channel] || CHANNEL_LABELS.whatsapp;
 
     const qrEl = document.getElementById('qrcode');
     qrEl.innerHTML = '';
     qr = new QRCode(qrEl, { text: url, width: 220, height: 220, colorDark: '#10254d', colorLight: '#ffffff' });
 
-    document.getElementById('openLink').href = url;
+    const openLink = document.getElementById('openLink');
+    openLink.href = url;
+    openLink.textContent = labels.open;
     document.getElementById('rawLink').textContent = url;
+    document.getElementById('channelNote').textContent = labels.note;
     document.getElementById('result').style.display = 'block';
   }
 </script>
