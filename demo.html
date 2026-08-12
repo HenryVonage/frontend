@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Try a Demo — Vonage AI Demos</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --navy: #1a3d7c;
+    --navy-dark: #10254d;
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #1f2430;
+    --muted: #6b7280;
+    --accent: #22c55e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  nav {
+    background: var(--navy);
+    padding: 14px 24px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  nav a {
+    color: #dbe4ff;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  nav a.active, nav a:hover { color: #fff; text-decoration: underline; }
+  nav .brand { color: #fff; font-weight: 700; margin-right: auto; font-size: 16px; }
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+  h1 { font-size: 26px; margin-bottom: 6px; }
+  p.lead { color: var(--muted); margin-top: 0; margin-bottom: 32px; }
+  .card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 28px;
+    box-shadow: 0 1px 3px rgba(16, 37, 77, 0.08), 0 8px 24px rgba(16, 37, 77, 0.06);
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--navy-dark);
+  }
+  input[type="text"], select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid #d7dce6;
+    font-size: 15px;
+    margin-bottom: 20px;
+    background: #fbfcfe;
+  }
+  input[type="text"]:focus, select:focus {
+    outline: none;
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(26, 61, 124, 0.12);
+  }
+  button {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 8px;
+    background: var(--navy);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { background: var(--navy-dark); }
+  button:disabled { background: #a9b6cf; cursor: not-allowed; }
+  #result {
+    display: none;
+    margin-top: 28px;
+    text-align: center;
+    border-top: 1px solid #eceff5;
+    padding-top: 24px;
+  }
+  #qrcode {
+    display: inline-block;
+    padding: 14px;
+    background: #fff;
+    border: 1px solid #eceff5;
+    border-radius: 10px;
+  }
+  .open-btn {
+    display: inline-block;
+    margin-top: 18px;
+    background: var(--accent);
+    color: #fff;
+    text-decoration: none;
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .open-btn:hover { background: #16a34a; }
+  .raw-link {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--muted);
+    word-break: break-all;
+    background: #f8f9fc;
+    padding: 10px;
+    border-radius: 6px;
+  }
+  .note {
+    margin-top: 30px;
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+  }
+  .demo-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: #eef2fb;
+    color: var(--navy);
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 18px;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Vonage AI Demos</span>
+  <a href="index.html">Home</a>
+  <a href="demo.html" class="active">Try a Demo</a>
+  <a href="logs.html">Logs</a>
+  <a href="architecture.html">How it works</a>
+</nav>
+
+<main>
+  <span class="demo-badge">Demo Portfolio</span>
+  <h1>Try a live demo on WhatsApp</h1>
+  <p class="lead">Enter your first name, pick a demo, and scan the QR code (or tap the button on mobile) to start a WhatsApp conversation with it.</p>
+
+  <div class="card">
+    <label for="firstName">Your first name</label>
+    <input type="text" id="firstName" placeholder="e.g. Henry" autocomplete="given-name">
+
+    <label for="demoSelect">Choose a demo</label>
+    <select id="demoSelect"></select>
+
+    <button id="generateBtn" onclick="generateQr()">Generate my QR code</button>
+
+    <div id="result">
+      <div id="qrcode"></div>
+      <div>
+        <a id="openLink" class="open-btn" href="#" target="_blank" rel="noopener">Open in WhatsApp</a>
+      </div>
+      <div id="rawLink" class="raw-link"></div>
+    </div>
+  </div>
+
+  <p class="note">More demos are on the way — this picker is built to grow into a full portfolio.</p>
+</main>
+
+<script>
+  // Portfolio of demos. Add a new entry here (and get its WABA number +
+  // greeting template approved as/if needed) to add it to the picker —
+  // no other page changes required.
+  const DEMOS = [
+    {
+      id: 'henry-real-estate',
+      label: "Henry's Real Estate",
+      wabaNumber: '447520691413', // Vonage Estate WABA
+      greeting: (name) => `Hi, I'm ${name} — Welcome to Henry's Real Estate demo!`,
+    },
+    // {
+    //   id: 'next-demo-id',
+    //   label: 'Next Demo Name',
+    //   wabaNumber: '4479...',
+    //   greeting: (name) => `Hi, I'm ${name} — Welcome to <Next Demo> demo!`,
+    // },
+  ];
+
+  const select = document.getElementById('demoSelect');
+  DEMOS.forEach((demo) => {
+    const opt = document.createElement('option');
+    opt.value = demo.id;
+    opt.textContent = demo.label;
+    select.appendChild(opt);
+  });
+
+  let qr = null;
+
+  function generateQr() {
+    const nameInput = document.getElementById('firstName');
+    const name = nameInput.value.trim();
+    if (!name) {
+      nameInput.focus();
+      nameInput.style.borderColor = '#dc2626';
+      return;
+    }
+    nameInput.style.borderColor = '';
+
+    const demo = DEMOS.find((d) => d.id === select.value);
+    const text = demo.greeting(name);
+    const url = `https://wa.me/${demo.wabaNumber}?text=${encodeURIComponent(text)}`;
+
+    const qrEl = document.getElementById('qrcode');
+    qrEl.innerHTML = '';
+    qr = new QRCode(qrEl, { text: url, width: 220, height: 220, colorDark: '#10254d', colorLight: '#ffffff' });
+
+    document.getElementById('openLink').href = url;
+    document.getElementById('rawLink').textContent = url;
+    document.getElementById('result').style.display = 'block';
+  }
+</script>
+
+</body>
+</html>

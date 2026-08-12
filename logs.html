@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logs — Vonage AI Demos</title>
+<style>
+  :root {
+    --navy: #1a3d7c;
+    --navy-dark: #10254d;
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #1f2430;
+    --muted: #6b7280;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  nav {
+    background: var(--navy);
+    padding: 14px 24px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  nav a { color: #dbe4ff; text-decoration: none; font-size: 14px; font-weight: 500; }
+  nav a.active, nav a:hover { color: #fff; text-decoration: underline; }
+  nav .brand { color: #fff; font-weight: 700; margin-right: auto; font-size: 16px; }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
+  h1 { font-size: 26px; margin-bottom: 6px; }
+  p.lead { color: var(--muted); margin-top: 0; margin-bottom: 28px; }
+  .card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 28px;
+    box-shadow: 0 1px 3px rgba(16, 37, 77, 0.08), 0 8px 24px rgba(16, 37, 77, 0.06);
+    margin-bottom: 24px;
+  }
+  .card h2 { font-size: 16px; margin-top: 0; color: var(--navy-dark); }
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  #feedStatus { font-size: 12.5px; color: var(--muted); }
+  ol, ul.legend { padding-left: 20px; line-height: 1.9; }
+  ul.legend { list-style: none; padding-left: 0; }
+  ul.legend li { margin-bottom: 4px; font-size: 13.5px; }
+  ul.legend .swatch {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 3px;
+    margin-right: 8px;
+  }
+  a.dashboard-btn {
+    display: inline-block;
+    margin-top: 8px;
+    background: var(--navy);
+    color: #fff;
+    text-decoration: none;
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  a.dashboard-btn:hover { background: var(--navy-dark); }
+  .terminal {
+    background: #0d1220;
+    color: #cfe0ff;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.8;
+    border-radius: 10px;
+    padding: 18px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    min-height: 120px;
+    max-height: 420px;
+    overflow-y: auto;
+  }
+  .terminal .tag-in { color: #7ee787; }
+  .terminal .tag-out { color: #79c0ff; }
+  .terminal .tag-decision { color: #d2a8ff; }
+  .terminal .tag-call { color: #f2cc60; }
+  .terminal .tag-dlr { color: #ff9d7e; }
+  .terminal .dim { color: #6b7280; }
+  .privacy-note {
+    font-size: 13px;
+    color: var(--muted);
+    background: #eef2fb;
+    border-left: 3px solid var(--navy);
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Vonage AI Demos</span>
+  <a href="index.html">Home</a>
+  <a href="demo.html">Try a Demo</a>
+  <a href="logs.html" class="active">Logs</a>
+  <a href="architecture.html">How it works</a>
+</nav>
+
+<main>
+  <h1>Watch the demo's activity live</h1>
+  <p class="lead">Every inbound message, marker decision, outbound send, and call event streams here in real time — no login required.</p>
+
+  <div class="card">
+    <div class="card-head">
+      <h2 style="margin:0;">Live activity feed</h2>
+      <span id="feedStatus">Connecting…</span>
+    </div>
+    <div class="terminal" id="liveFeed">Waiting for activity…</div>
+    <div class="privacy-note">Phone numbers are redacted server-side before they ever reach this page (e.g. <code>447•••1413</code>) — nothing sensitive is exposed publicly.</div>
+  </div>
+
+  <div class="card">
+    <h2>What the tags mean</h2>
+    <ul class="legend">
+      <li><span class="swatch" style="background:#7ee787;"></span><strong>inbound</strong> — a message a visitor sent</li>
+      <li><span class="swatch" style="background:#d2a8ff;"></span><strong>decision</strong> — which step of the flow Claude routed it to</li>
+      <li><span class="swatch" style="background:#79c0ff;"></span><strong>outbound</strong> — a template or reply sent back</li>
+      <li><span class="swatch" style="background:#f2cc60;"></span><strong>call</strong> — a voice call event (answered, completed)</li>
+      <li><span class="swatch" style="background:#ff9d7e;"></span><strong>dlr</strong> — delivery receipt / send status from WhatsApp</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>Full, unredacted logs (site owner only)</h2>
+    <p style="font-size: 13.5px; color: var(--muted);">Deploy history, raw payloads, and errors — requires your own Render login.</p>
+    <a class="dashboard-btn" href="https://dashboard.render.com" target="_blank" rel="noopener">Open Render Dashboard →</a>
+  </div>
+</main>
+
+<script>
+  // Points at the backend that powers the demo(s). If you add a demo
+  // hosted on a different backend, this page would need a way to pick
+  // which one to poll — fine for a single-backend portfolio for now.
+  const API_BASE = 'https://websocketcalls.onrender.com';
+
+  const feedEl = document.getElementById('liveFeed');
+  const statusEl = document.getElementById('feedStatus');
+  const tagClass = { inbound: 'tag-in', decision: 'tag-decision', outbound: 'tag-out', call: 'tag-call', dlr: 'tag-dlr' };
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function renderFeed(events) {
+    if (!events.length) {
+      feedEl.textContent = 'No activity yet — try the demo to see it appear here.';
+      return;
+    }
+    feedEl.innerHTML = events
+      .slice(-40)
+      .reverse()
+      .map((e) => {
+        const time = new Date(e.ts).toLocaleTimeString();
+        const cls = tagClass[e.type] || 'dim';
+        return `<span class="dim">[${time}]</span> <span class="${cls}">${e.type}</span>  ${escapeHtml(e.message)}`;
+      })
+      .join('\n');
+  }
+
+  async function pollLogs() {
+    try {
+      const res = await fetch(`${API_BASE}/api/logs`, { cache: 'no-store' });
+      if (!res.ok) throw new Error('status ' + res.status);
+      const data = await res.json();
+      renderFeed(data.events || []);
+      statusEl.textContent = '● Live — updated ' + new Date().toLocaleTimeString();
+      statusEl.style.color = '#16a34a';
+    } catch (err) {
+      statusEl.textContent = 'Waking up the server… (Render free tier can take up to ~50s on first load)';
+      statusEl.style.color = '#c2760a';
+    }
+  }
+
+  pollLogs();
+  setInterval(pollLogs, 4000);
+</script>
+
+</body>
+</html>

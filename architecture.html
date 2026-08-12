@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How it works — Vonage AI Demos</title>
+<style>
+  :root {
+    --navy: #1a3d7c;
+    --navy-dark: #10254d;
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #1f2430;
+    --muted: #6b7280;
+    --accent: #22c55e;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  nav {
+    background: var(--navy);
+    padding: 14px 24px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  nav a { color: #dbe4ff; text-decoration: none; font-size: 14px; font-weight: 500; }
+  nav a.active, nav a:hover { color: #fff; text-decoration: underline; }
+  nav .brand { color: #fff; font-weight: 700; margin-right: auto; font-size: 16px; }
+  main { max-width: 880px; margin: 0 auto; padding: 40px 20px 80px; }
+  h1 { font-size: 26px; margin-bottom: 6px; }
+  p.lead { color: var(--muted); margin-top: 0; margin-bottom: 28px; }
+  .card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 28px;
+    box-shadow: 0 1px 3px rgba(16, 37, 77, 0.08), 0 8px 24px rgba(16, 37, 77, 0.06);
+    margin-bottom: 24px;
+  }
+  .card h2 { font-size: 17px; margin-top: 0; color: var(--navy-dark); }
+  .card p { line-height: 1.6; color: #333; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 12px;
+  }
+  .item {
+    border: 1px solid #eceff5;
+    border-radius: 10px;
+    padding: 14px 16px;
+    background: #fbfcfe;
+  }
+  .item .k { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .item .v { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  ol.steps { padding-left: 20px; line-height: 1.9; }
+  ol.steps li strong { color: var(--navy-dark); }
+  .ref {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .ref a { color: var(--navy); }
+  svg text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Vonage AI Demos</span>
+  <a href="index.html">Home</a>
+  <a href="demo.html">Try a Demo</a>
+  <a href="logs.html">Logs</a>
+  <a href="architecture.html" class="active">How it works</a>
+</nav>
+
+<main>
+  <h1>How this demo is built</h1>
+  <p class="lead">A high-level look at the integrations and moving parts behind each demo in this portfolio — useful if you want to build your own.</p>
+
+  <div class="card">
+    <h2>Architecture</h2>
+    <svg viewBox="0 0 860 300" width="100%" height="auto" role="img" aria-label="Architecture diagram">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#6b7280"/>
+        </marker>
+      </defs>
+
+      <!-- Boxes -->
+      <g font-size="12.5" fill="#1f2430">
+        <rect x="20" y="30" width="140" height="60" rx="8" fill="#eef2fb" stroke="#1a3d7c"/>
+        <text x="90" y="55" text-anchor="middle" font-weight="700">WhatsApp</text>
+        <text x="90" y="72" text-anchor="middle" fill="#6b7280">(text + voice)</text>
+
+        <rect x="20" y="200" width="140" height="60" rx="8" fill="#eef2fb" stroke="#1a3d7c"/>
+        <text x="90" y="225" text-anchor="middle" font-weight="700">Demo Landing</text>
+        <text x="90" y="242" text-anchor="middle" fill="#6b7280">(GitHub Pages)</text>
+
+        <rect x="240" y="115" width="150" height="60" rx="8" fill="#eef2fb" stroke="#1a3d7c"/>
+        <text x="315" y="140" text-anchor="middle" font-weight="700">Vonage APIs</text>
+        <text x="315" y="157" text-anchor="middle" fill="#6b7280">Messages + Voice (NCCO)</text>
+
+        <rect x="470" y="115" width="150" height="60" rx="8" fill="#e6f7ec" stroke="#16a34a"/>
+        <text x="545" y="140" text-anchor="middle" font-weight="700">Node.js Server</text>
+        <text x="545" y="157" text-anchor="middle" fill="#6b7280">Render (Express + ws)</text>
+
+        <rect x="700" y="30" width="140" height="60" rx="8" fill="#fdf3e6" stroke="#c2760a"/>
+        <text x="770" y="55" text-anchor="middle" font-weight="700">Claude</text>
+        <text x="770" y="72" text-anchor="middle" fill="#6b7280">reasoning "brain"</text>
+
+        <rect x="700" y="200" width="140" height="60" rx="8" fill="#fdf3e6" stroke="#c2760a"/>
+        <text x="770" y="225" text-anchor="middle" font-weight="700">ElevenLabs</text>
+        <text x="770" y="242" text-anchor="middle" fill="#6b7280">voice STT/TTS agent</text>
+      </g>
+
+      <!-- Arrows -->
+      <g stroke="#6b7280" stroke-width="1.4" marker-end="url(#arrow)" fill="none">
+        <path d="M160,60 L240,140"/>
+        <path d="M160,230 L240,150"/>
+        <path d="M390,145 L470,145"/>
+        <path d="M620,140 L700,65"/>
+        <path d="M620,150 L700,220"/>
+        <path d="M700,80 L400,145" stroke-dasharray="3,3"/>
+      </g>
+      <text x="430" y="100" font-size="11" fill="#6b7280">reply</text>
+      <text x="655" y="185" font-size="11" fill="#6b7280">realtime audio (websocket)</text>
+    </svg>
+    <p style="font-size:12.5px; color:var(--muted); margin-top:4px;">Solid arrows: request flow. Dashed: Claude's response returned to the server (text flow) or streamed in real time alongside ElevenLabs (voice flow).</p>
+  </div>
+
+  <div class="card">
+    <h2>Prerequisites to build a demo like this</h2>
+    <div class="grid">
+      <div class="item">
+        <div class="k">Vonage Application</div>
+        <div class="v">Voice + Messages capable, with a private key for JWT auth, Answer/Event URLs pointed at your server.</div>
+      </div>
+      <div class="item">
+        <div class="k">WABA number</div>
+        <div class="v">A WhatsApp Business number linked to the Vonage Application, with Cloud API Calling enabled for voice.</div>
+      </div>
+      <div class="item">
+        <div class="k">Approved message templates</div>
+        <div class="v">Utility-category templates for anything sent outside the 24h session window (welcome, confirmations, call recap).</div>
+      </div>
+      <div class="item">
+        <div class="k">Node.js server (Render)</div>
+        <div class="v">Express for HTTP webhooks, a raw websocket upgrade for real-time audio, secrets kept in env vars / Secret Files, never in the repo.</div>
+      </div>
+      <div class="item">
+        <div class="k">GitHub repo</div>
+        <div class="v">Source of truth; Render auto-deploys on push. This static frontend is hosted separately on GitHub Pages.</div>
+      </div>
+      <div class="item">
+        <div class="k">Claude (Anthropic API)</div>
+        <div class="v">Decides conversation steps for text chat, and acts as the reasoning LLM inside the ElevenLabs voice agent.</div>
+      </div>
+      <div class="item">
+        <div class="k">ElevenLabs Conversational AI</div>
+        <div class="v">Handles speech-to-text, text-to-speech and turn-taking for voice calls, bridged to the caller over a websocket.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>How a call/message flows end to end</h2>
+    <ol class="steps">
+      <li><strong>Landing page:</strong> visitor enters their name, picks a demo, and scans a QR code (or taps a link) encoding a pre-filled WhatsApp message to that demo's WABA number.</li>
+      <li><strong>Text flow:</strong> the message hits the server's webhook, Claude decides which step of the conversation it is, and the server sends back the matching WhatsApp template or free-form reply via the Messages API.</li>
+      <li><strong>Voice flow:</strong> if the visitor calls instead, Vonage's Answer URL returns an NCCO that connects the call to the server over a websocket; audio is bridged to an ElevenLabs agent (running Claude as its LLM) in real time.</li>
+      <li><strong>Call ends:</strong> the server fetches the call transcript from ElevenLabs, has Claude generate a short recap, renders it as a PDF, and sends it back over WhatsApp as an approved template (works even without an open session window).</li>
+      <li><strong>Delivery receipts:</strong> Vonage posts async status callbacks so the server can log/detect failures (e.g. unapproved templates, expired sessions).</li>
+    </ol>
+    <p class="ref">Modeled loosely on Vonage's own <a href="https://developer.vonage.com/en/blog/build-a-5-node-ai-whatsapp-receptionist-with-n8n-and-vonage-mcp-tools" target="_blank" rel="noopener">"Build a 5-node AI WhatsApp receptionist"</a> walkthrough — this version replaces the n8n workflow with a small Node.js server on Render.</p>
+  </div>
+</main>
+
+</body>
+</html>
