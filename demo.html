@@ -359,7 +359,12 @@
   function buildLaunchUrl(demo, name) {
     const text = demo.greeting(name);
     if (demo.channel === 'rcs') {
-      return `sms:${encodeURIComponent(demo.rcsServiceId)}?bot-name=${encodeURIComponent(demo.botName)}&body=${encodeURIComponent(text)}`;
+      // The service_id (recipient) must stay literal — encoding it turns
+      // the "@" into "%40", which breaks Android/Messages' recognition of
+      // it as an RBM agent address (confirmed by testing: it fell back to
+      // treating the whole string as a garbled SMS recipient). Only the
+      // query param *values* (bot-name, body) get URI-encoded.
+      return `sms:${demo.rcsServiceId}?bot-name=${encodeURIComponent(demo.botName)}&body=${encodeURIComponent(text)}`;
     }
     return `https://wa.me/${demo.wabaNumber}?text=${encodeURIComponent(text)}`;
   }
