@@ -314,7 +314,10 @@
       label: "Henry's Real Estate (WhatsApp)",
       channel: 'whatsapp',
       wabaNumber: '447520691413', // Vonage Estate WABA
-      greeting: (name) => `Hi, I'm ${name} — Welcome to Henry's Real Estate demo!`,
+      // No apostrophes in the greeting text — some deep-link/QR consumers
+      // (confirmed with the RCS demo's native Camera app test) mishandle
+      // the encoded apostrophe. "I'm"/"Henry's" avoided on purpose.
+      greeting: (name) => `Hi, Im ${name} — Welcome to Henrys Real Estate demo!`,
       description: 'This demo is built to cover the breadth of the WhatsApp Business API — including the latest feature, WhatsApp Calling, where the AI agent can call you directly inside WhatsApp.',
       highlights: [
         'Rich message templates (image, video & document headers)',
@@ -329,7 +332,7 @@
       channel: 'rcs',
       rcsServiceId: 'henry_rcs_demo3_byrrgzuw_agent@rbm.goog',
       botName: 'Vonage RCS Demo-Henry',
-      greeting: (name) => `Hi, I'm ${name} — Welcome to Henry's Real Estate demo!`,
+      greeting: (name) => `Hi, Im ${name} — Welcome to Henrys Real Estate demo!`,
       description: 'This demo is built to cover the breadth of RCS Business Messaging — rich cards, suggestion chips and native actions — plus voice escalation to a real PSTN phone call for a richer conversation.',
       highlights: [
         'Rich cards with images and tappable suggestion chips',
@@ -406,7 +409,10 @@
   // start rather than gated behind a button press.
   function greetingFor(demo, name) {
     if (name) return demo.greeting(name);
-    return `Welcome to ${demo.label.replace(/\s*\([^)]*\)\s*$/, '')} demo!`;
+    // Apostrophe-free on purpose (see the greeting() functions above) —
+    // built from the label but with any apostrophes stripped, rather than
+    // reusing demo.label as-is (which has "Henry's" for on-screen display).
+    return `Welcome to ${demo.label.replace(/\s*\([^)]*\)\s*$/, '').replace(/'/g, '')} demo!`;
   }
 
   function buildLaunchUrl(demo, name) {
