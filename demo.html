@@ -86,11 +86,21 @@
   button:hover { background: var(--navy-dark); }
   button:disabled { background: #a9b6cf; cursor: not-allowed; }
   #result {
-    display: none;
     margin-top: 28px;
     text-align: center;
     border-top: 1px solid #eceff5;
     padding-top: 24px;
+  }
+  .try-now {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--navy-dark);
+    margin: 0 0 16px;
+  }
+  .name-hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin: -12px 0 20px;
   }
   #qrcode {
     display: inline-block;
@@ -221,9 +231,10 @@
 
     <div id="demoInfo" class="demo-info"></div>
 
-    <button id="generateBtn" onclick="generateQr()">Generate my QR code</button>
+    <p class="name-hint">Add your first name above for a personalized greeting — the QR code below updates as you type.</p>
 
     <div id="result">
+      <p class="try-now" id="tryNowText">Try the demo right now — scan that QR code!</p>
       <div id="qrcode"></div>
       <div>
         <a id="openLink" class="open-btn" href="#" target="_blank" rel="noopener">Open</a>
@@ -356,8 +367,16 @@
   // expects (RCC.07) — service_id as the recipient, plus bot-name and body
   // query params. Must stay inside a clickable link/QR: browsers block
   // typing/pasting sms: URIs directly for security reasons.
+  // Falls back to a generic greeting (no name capture on the backend) until
+  // the visitor types their first name — the QR code is live from the
+  // start rather than gated behind a button press.
+  function greetingFor(demo, name) {
+    if (name) return demo.greeting(name);
+    return `Welcome to ${demo.label.replace(/\s*\([^)]*\)\s*$/, '')} demo!`;
+  }
+
   function buildLaunchUrl(demo, name) {
-    const text = demo.greeting(name);
+    const text = greetingFor(demo, name);
     if (demo.channel === 'rcs') {
       // The service_id (recipient) must stay literal — encoding it turns
       // the "@" into "%40", which breaks Android/Messages' recognition of
@@ -410,20 +429,14 @@
     document.getElementById('archVoiceLabel').textContent = arch.voiceLabel;
   }
 
-  select.addEventListener('change', updateDemoInfo);
-  updateDemoInfo();
-
   let qr = null;
 
-  function generateQr() {
+  // Live-refreshes the QR code / open link for whatever demo + name are
+  // currently selected — no button press needed. Called on load, whenever
+  // the demo picker changes, and on every keystroke in the name field.
+  function refreshDemo() {
     const nameInput = document.getElementById('firstName');
     const name = nameInput.value.trim();
-    if (!name) {
-      nameInput.focus();
-      nameInput.style.borderColor = '#dc2626';
-      return;
-    }
-    nameInput.style.borderColor = '';
 
     const demo = DEMOS.find((d) => d.id === select.value);
     const url = buildLaunchUrl(demo, name);
@@ -438,8 +451,19 @@
     openLink.textContent = labels.open;
     document.getElementById('rawLink').textContent = url;
     document.getElementById('channelNote').textContent = labels.note;
-    document.getElementById('result').style.display = 'block';
+    document.getElementById('tryNowText').textContent = name
+      ? `Try the demo right now, ${name} — scan that QR code!`
+      : 'Try the demo right now — scan that QR code!';
   }
+
+  function refreshAll() {
+    updateDemoInfo();
+    refreshDemo();
+  }
+
+  select.addEventListener('change', refreshAll);
+  document.getElementById('firstName').addEventListener('input', refreshDemo);
+  refreshAll();
 </script>
 
 </body>
