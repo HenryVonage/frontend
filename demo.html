@@ -357,6 +357,40 @@
     select.appendChild(opt);
   });
 
+  const API_BASE = 'https://websocketcalls.onrender.com';
+
+  // The officially-generated RCS deep link (via Vonage's Channel Manager
+  // API, fetched server-side at /api/rcs-deeplink) — Android's native
+  // Camera app didn't recognize our hand-built sms: URI as an RBM agent
+  // invite, but this endpoint produces the format it does recognize.
+  // Fetched once on load; buildLaunchUrl() below falls back to the
+  // hand-built link (still works in some scanners) until/unless this
+  // resolves, and silently upgrades once it does.
+  let officialRcsDeeplink = null;
+  fetch(`${API_BASE}/api/rcs-deeplink`)
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => {
+      if (data && data.url) {
+        officialRcsDeeplink = data.url;
+        console.log('Using Vonage-generated RCS deep link:', officialRcsDeeplink);
+        refreshAll();
+      } else if (data) {
+        console.warn('RCS deeplink endpoint returned no recognizable URL — check the raw response:', data.raw);
+      }
+    })
+    .catch((err) => console.warn('Could not fetch RCS deeplink (falling back to client-built link):', err.message));
+
+  // Sets/replaces the `body` query param on a deep link that may already
+  // have its own query string, without disturbing other params or their
+  // encoding (avoids URLSearchParams, which encodes spaces as "+" instead
+  // of "%20" — the format confirmed to work for this deep link scheme).
+  function withBody(url, bodyText) {
+    const [base, query = ''] = url.split('?');
+    const params = query.split('&').filter((p) => p && !p.startsWith('body='));
+    params.push(`body=${encodeURIComponent(bodyText)}`);
+    return `${base}?${params.join('&')}`;
+  }
+
   const CHANNEL_LABELS = {
     whatsapp: { open: 'Open in WhatsApp', note: 'Scan with your phone’s camera, or tap Open on mobile, to launch WhatsApp with this chat pre-filled.' },
     rcs: { open: 'Open in Messages', note: 'Scan with your phone’s camera, or tap Open on mobile, to launch RCS chat (Google Messages / supported RCS app) with this chat pre-filled.' },
@@ -378,6 +412,13 @@
   function buildLaunchUrl(demo, name) {
     const text = greetingFor(demo, name);
     if (demo.channel === 'rcs') {
+      // Prefer the link Vonage's Channel Manager API generated for us —
+      // confirmed to be what Android's native Camera app recognizes.
+      // Until/unless that's fetched, fall back to the hand-built sms: URI
+      // (works in some third-party scanners, just not the native Camera).
+      if (officialRcsDeeplink) {
+        return withBody(officialRcsDeeplink, text);
+      }
       // The service_id (recipient) must stay literal — encoding it turns
       // the "@" into "%40", which breaks Android/Messages' recognition of
       // it as an RBM agent address (confirmed by testing: it fell back to
