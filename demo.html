@@ -247,6 +247,28 @@
   .tester-status.ok { color: #15803d; }
   .tester-status.error { color: #b91c1c; }
   .tester-status.pending { color: #7c4a03; }
+  .tester-confirm {
+    display: none;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #fde4bc;
+  }
+  .tester-confirm.visible { display: flex; }
+  .tester-confirm input[type="checkbox"] {
+    margin-top: 2px;
+    width: auto;
+    margin-bottom: 0;
+  }
+  .tester-confirm label {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #7c4a03;
+    margin: 0;
+    text-transform: none;
+    letter-spacing: normal;
+  }
 </style>
 </head>
 <body>
@@ -280,6 +302,10 @@
         <button id="registerTesterBtn" onclick="registerTester()">Register me as a tester</button>
       </div>
       <div id="testerStatus" class="tester-status"></div>
+      <div id="testerConfirm" class="tester-confirm">
+        <input type="checkbox" id="testerAcceptedInvite" onchange="onTesterInviteToggle()">
+        <label for="testerAcceptedInvite">Google sends an SMS invite to that number — I've opened it and tapped Accept/Yes. (Scanning won't work until this invite is accepted.)</label>
+      </div>
     </div>
 
     <p class="name-hint">Add your first name above for a personalized greeting — the QR code below updates as you type.</p>
@@ -535,26 +561,35 @@
     const status = document.getElementById('testerStatus');
     status.textContent = '';
     status.className = 'tester-status';
+    document.getElementById('testerConfirm').classList.remove('visible');
+    document.getElementById('testerAcceptedInvite').checked = false;
   }
 
   // Registers the phone number typed into #testerPhone as an allow-listed
   // test device on the RCS agent, via the backend's /api/rcs-test-device
   // (which calls Vonage's Channel Manager API). Demo-only step — see the
-  // disclaimer text in #testerBox.
+  // disclaimer text in #testerBox. Registering alone isn't enough: Google
+  // also sends that number an SMS invite which has to be accepted before
+  // the chat actually opens — the checkbox below tracks that second step
+  // (confirmed the hard way: registration succeeded but scanning still
+  // failed until the SMS invite was accepted).
   async function registerTester() {
     const input = document.getElementById('testerPhone');
     const phoneNumber = input.value.trim();
     const status = document.getElementById('testerStatus');
     const btn = document.getElementById('registerTesterBtn');
+    const confirmRow = document.getElementById('testerConfirm');
 
     if (!phoneNumber) {
       input.focus();
       status.textContent = 'Enter your phone number first.';
       status.className = 'tester-status error';
+      confirmRow.classList.remove('visible');
       return;
     }
 
     btn.disabled = true;
+    confirmRow.classList.remove('visible');
     status.textContent = 'Registering you as a tester…';
     status.className = 'tester-status pending';
 
@@ -566,8 +601,11 @@
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        status.textContent = 'Registered! You can scan the QR code below now.';
+        status.textContent = "Registered! Google will text that number an invite — open it and tap Accept, then tick the box below.";
         status.className = 'tester-status ok';
+        document.getElementById('testerAcceptedInvite').checked = false;
+        confirmRow.classList.add('visible');
+        refreshDemo();
       } else {
         console.warn('RCS test-device registration failed:', data);
         status.textContent = `Could not register that number (${data.error || res.status}). Check the number and try again, or ask Henry to add it manually.`;
@@ -579,6 +617,12 @@
     } finally {
       btn.disabled = false;
     }
+  }
+
+  // Re-runs refreshDemo() whenever the checkbox changes so the "Try the
+  // demo" copy below reflects whether the SMS invite has been accepted yet.
+  function onTesterInviteToggle() {
+    refreshDemo();
   }
 
   let qr = null;
@@ -603,9 +647,22 @@
     openLink.textContent = labels.open;
     document.getElementById('rawLink').textContent = url;
     document.getElementById('channelNote').textContent = labels.note;
-    document.getElementById('tryNowText').textContent = name
-      ? `Try the demo right now, ${name} — scan that QR code!`
-      : 'Try the demo right now — scan that QR code!';
+
+    const tryNow = document.getElementById('tryNowText');
+    const inviteBox = document.getElementById('testerConfirm');
+    const needsInviteAccepted = demo.channel === 'rcs'
+      && inviteBox.classList.contains('visible')
+      && !document.getElementById('testerAcceptedInvite').checked;
+
+    if (needsInviteAccepted) {
+      tryNow.textContent = 'Almost there — accept the SMS invite above first, then scan.';
+      tryNow.style.color = '#b45309';
+    } else {
+      tryNow.textContent = name
+        ? `Try the demo right now, ${name} — scan that QR code!`
+        : 'Try the demo right now — scan that QR code!';
+      tryNow.style.color = '';
+    }
   }
 
   function refreshAll() {
