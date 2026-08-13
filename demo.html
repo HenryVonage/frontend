@@ -205,6 +205,48 @@
     margin: 0 0 14px;
   }
   .arch-card svg { width: 100%; height: auto; display: block; }
+  .tester-box {
+    display: none;
+    margin: -6px 0 20px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: #fff7ed;
+    border: 1px solid #fde4bc;
+  }
+  .tester-box.visible { display: block; }
+  .tester-box p {
+    margin: 0 0 10px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #7c4a03;
+  }
+  .tester-box .tester-row {
+    display: flex;
+    gap: 8px;
+  }
+  .tester-box input[type="tel"] {
+    flex: 1;
+    margin-bottom: 0;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  .tester-box button {
+    width: auto;
+    white-space: nowrap;
+    padding: 10px 16px;
+    font-size: 13px;
+    background: #b45309;
+  }
+  .tester-box button:hover { background: #92400e; }
+  .tester-box button:disabled { background: #d6b98c; cursor: not-allowed; }
+  .tester-status {
+    margin-top: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  .tester-status.ok { color: #15803d; }
+  .tester-status.error { color: #b91c1c; }
+  .tester-status.pending { color: #7c4a03; }
 </style>
 </head>
 <body>
@@ -230,6 +272,15 @@
     <select id="demoSelect"></select>
 
     <div id="demoInfo" class="demo-info"></div>
+
+    <div id="testerBox" class="tester-box">
+      <p>This RCS agent is still in testing, not fully launched with carriers yet — Google Messages only opens a chat with it for approved test numbers. For the sake of this demo only, enter your phone number below and we'll register it as a tester before you scan.</p>
+      <div class="tester-row">
+        <input type="tel" id="testerPhone" placeholder="e.g. 07441 443052" autocomplete="tel">
+        <button id="registerTesterBtn" onclick="registerTester()">Register me as a tester</button>
+      </div>
+      <div id="testerStatus" class="tester-status"></div>
+    </div>
 
     <p class="name-hint">Add your first name above for a personalized greeting — the QR code below updates as you type.</p>
 
@@ -474,6 +525,60 @@
     document.getElementById('archChannelLabel').textContent = arch.channelLabel;
     document.getElementById('archVoiceIcon').textContent = arch.voiceIcon;
     document.getElementById('archVoiceLabel').textContent = arch.voiceLabel;
+
+    // The tester-registration step only applies to the RCS demo — its
+    // agent isn't fully launched with carriers/Google yet, so only
+    // allow-listed test numbers can actually open a chat with it (see
+    // registerTester() below). Reset any previous status when switching
+    // demos so a stale "Registered!" message doesn't linger.
+    document.getElementById('testerBox').classList.toggle('visible', demo.channel === 'rcs');
+    const status = document.getElementById('testerStatus');
+    status.textContent = '';
+    status.className = 'tester-status';
+  }
+
+  // Registers the phone number typed into #testerPhone as an allow-listed
+  // test device on the RCS agent, via the backend's /api/rcs-test-device
+  // (which calls Vonage's Channel Manager API). Demo-only step — see the
+  // disclaimer text in #testerBox.
+  async function registerTester() {
+    const input = document.getElementById('testerPhone');
+    const phoneNumber = input.value.trim();
+    const status = document.getElementById('testerStatus');
+    const btn = document.getElementById('registerTesterBtn');
+
+    if (!phoneNumber) {
+      input.focus();
+      status.textContent = 'Enter your phone number first.';
+      status.className = 'tester-status error';
+      return;
+    }
+
+    btn.disabled = true;
+    status.textContent = 'Registering you as a tester…';
+    status.className = 'tester-status pending';
+
+    try {
+      const res = await fetch(`${API_BASE}/api/rcs-test-device`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        status.textContent = 'Registered! You can scan the QR code below now.';
+        status.className = 'tester-status ok';
+      } else {
+        console.warn('RCS test-device registration failed:', data);
+        status.textContent = `Could not register that number (${data.error || res.status}). Check the number and try again, or ask Henry to add it manually.`;
+        status.className = 'tester-status error';
+      }
+    } catch (err) {
+      status.textContent = `Network error registering that number: ${err.message}`;
+      status.className = 'tester-status error';
+    } finally {
+      btn.disabled = false;
+    }
   }
 
   let qr = null;
