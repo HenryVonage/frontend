@@ -464,27 +464,24 @@
   };
 
   // Builds the launch URL for a demo + name. WhatsApp uses the standard
-  // wa.me deep link. RCS uses the sms: deep link format Google's RBM spec
-  // expects (RCC.07) — service_id as the recipient, plus bot-name and body
-  // query params. Must stay inside a clickable link/QR: browsers block
-  // typing/pasting sms: URIs directly for security reasons.
+  // wa.me deep link — a plain https:// URL that WhatsApp's own servers
+  // 302-redirect to whatsapp://send?..., which is why it's always been
+  // reliably recognized by QR scanners AND pre-fills the message: the
+  // *browser* follows the redirect and hands the whatsapp:// scheme to
+  // the OS, rather than a scanner app trying to interpret it directly.
   //
-  // This intentionally does NOT use Vonage's Channel Manager deeplink-
-  // generate endpoint (still on the backend at /api/rcs-deeplink) as the
-  // launch link: confirmed against Vonage's own docs
+  // RCS needs the same trick, confirmed the hard way: a raw sms:...?body=
+  // URI (RCC.07 — the officially documented way to pre-fill an RBM chat)
+  // scanned directly showed up as inert text / a generic "Send SMS" card
+  // in a real scanner app instead of opening Messages with anything
+  // pre-filled. Vonage's own Channel Manager deeplink-generate endpoint
+  // doesn't help either — confirmed against Vonage's own docs
   // (developer.vonage.com/en/channel-manager/code-snippets/rcs/
-  // rcs-deeplinks/generate-rcs-deeplink) that endpoint only accepts
-  // sender_id + country — there's no field for pre-filled message text.
-  // The https link it returns is an opaque per-agent token; appending
-  // ?body= to it client-side (the previous approach here) silently did
-  // nothing, since Vonage never received that text at generation time.
-  // The hand-built sms: URI below is the only one of the two that
-  // actually pre-fills the message — the whole point of this QR code is
-  // that the visitor can just tap Send, so that wins over the other
-  // link's slightly better recognition by the stock Android Camera app.
-  // If scan recognition becomes a real problem again, the Open-in-
-  // Messages button and raw link text below are the fallback path (they
-  // don't depend on QR scanning at all).
+  // rcs-deeplinks/generate-rcs-deeplink) that it only accepts sender_id +
+  // country, with no field for message text at all.
+  // So: point the QR/Open link at our own backend (/rcs-launch, mirrors
+  // wa.me), which 302-redirects to the real sms:...?body= URI — same
+  // browser-mediated hand-off that already works for WhatsApp above.
   //
   // Falls back to a generic greeting (no name capture on the backend) until
   // the visitor types their first name — the QR code is live from the
@@ -500,12 +497,7 @@
   function buildLaunchUrl(demo, name) {
     const text = greetingFor(demo, name);
     if (demo.channel === 'rcs') {
-      // The service_id (recipient) must stay literal — encoding it turns
-      // the "@" into "%40", which breaks Android/Messages' recognition of
-      // it as an RBM agent address (confirmed by testing: it fell back to
-      // treating the whole string as a garbled SMS recipient). Only the
-      // query param *values* (bot-name, body) get URI-encoded.
-      return `sms:${demo.rcsServiceId}?bot-name=${encodeURIComponent(demo.botName)}&body=${encodeURIComponent(text)}`;
+      return `${API_BASE}/rcs-launch?to=${encodeURIComponent(demo.rcsServiceId)}&bot=${encodeURIComponent(demo.botName)}&body=${encodeURIComponent(text)}`;
     }
     return `https://wa.me/${demo.wabaNumber}?text=${encodeURIComponent(text)}`;
   }
