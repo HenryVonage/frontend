@@ -458,38 +458,6 @@
 
   const API_BASE = 'https://websocketcalls.onrender.com';
 
-  // The officially-generated RCS deep link (via Vonage's Channel Manager
-  // API, fetched server-side at /api/rcs-deeplink) — Android's native
-  // Camera app didn't recognize our hand-built sms: URI as an RBM agent
-  // invite, but this endpoint produces the format it does recognize.
-  // Fetched once on load; buildLaunchUrl() below falls back to the
-  // hand-built link (still works in some scanners) until/unless this
-  // resolves, and silently upgrades once it does.
-  let officialRcsDeeplink = null;
-  fetch(`${API_BASE}/api/rcs-deeplink`)
-    .then((r) => (r.ok ? r.json() : null))
-    .then((data) => {
-      if (data && data.url) {
-        officialRcsDeeplink = data.url;
-        console.log('Using Vonage-generated RCS deep link:', officialRcsDeeplink);
-        refreshAll();
-      } else if (data) {
-        console.warn('RCS deeplink endpoint returned no recognizable URL — check the raw response:', data.raw);
-      }
-    })
-    .catch((err) => console.warn('Could not fetch RCS deeplink (falling back to client-built link):', err.message));
-
-  // Sets/replaces the `body` query param on a deep link that may already
-  // have its own query string, without disturbing other params or their
-  // encoding (avoids URLSearchParams, which encodes spaces as "+" instead
-  // of "%20" — the format confirmed to work for this deep link scheme).
-  function withBody(url, bodyText) {
-    const [base, query = ''] = url.split('?');
-    const params = query.split('&').filter((p) => p && !p.startsWith('body='));
-    params.push(`body=${encodeURIComponent(bodyText)}`);
-    return `${base}?${params.join('&')}`;
-  }
-
   const CHANNEL_LABELS = {
     whatsapp: { open: 'Open in WhatsApp', note: 'Scan with your phone’s camera, or tap Open on mobile, to launch WhatsApp with this chat pre-filled.' },
     rcs: { open: 'Open in Messages', note: 'Scan with your phone’s camera, or tap Open on mobile, to launch RCS chat (Google Messages / supported RCS app) with this chat pre-filled.' },
@@ -500,6 +468,24 @@
   // expects (RCC.07) — service_id as the recipient, plus bot-name and body
   // query params. Must stay inside a clickable link/QR: browsers block
   // typing/pasting sms: URIs directly for security reasons.
+  //
+  // This intentionally does NOT use Vonage's Channel Manager deeplink-
+  // generate endpoint (still on the backend at /api/rcs-deeplink) as the
+  // launch link: confirmed against Vonage's own docs
+  // (developer.vonage.com/en/channel-manager/code-snippets/rcs/
+  // rcs-deeplinks/generate-rcs-deeplink) that endpoint only accepts
+  // sender_id + country — there's no field for pre-filled message text.
+  // The https link it returns is an opaque per-agent token; appending
+  // ?body= to it client-side (the previous approach here) silently did
+  // nothing, since Vonage never received that text at generation time.
+  // The hand-built sms: URI below is the only one of the two that
+  // actually pre-fills the message — the whole point of this QR code is
+  // that the visitor can just tap Send, so that wins over the other
+  // link's slightly better recognition by the stock Android Camera app.
+  // If scan recognition becomes a real problem again, the Open-in-
+  // Messages button and raw link text below are the fallback path (they
+  // don't depend on QR scanning at all).
+  //
   // Falls back to a generic greeting (no name capture on the backend) until
   // the visitor types their first name — the QR code is live from the
   // start rather than gated behind a button press.
@@ -514,13 +500,6 @@
   function buildLaunchUrl(demo, name) {
     const text = greetingFor(demo, name);
     if (demo.channel === 'rcs') {
-      // Prefer the link Vonage's Channel Manager API generated for us —
-      // confirmed to be what Android's native Camera app recognizes.
-      // Until/unless that's fetched, fall back to the hand-built sms: URI
-      // (works in some third-party scanners, just not the native Camera).
-      if (officialRcsDeeplink) {
-        return withBody(officialRcsDeeplink, text);
-      }
       // The service_id (recipient) must stay literal — encoding it turns
       // the "@" into "%40", which breaks Android/Messages' recognition of
       // it as an RBM agent address (confirmed by testing: it fell back to
