@@ -418,6 +418,25 @@
         'Post-call recap & booking confirmation sent back over RCS',
       ],
     },
+    {
+      id: 'henry-ticketing-rcs',
+      label: 'Rolex Monte-Carlo Masters — Ticketing (RCS)',
+      channel: 'rcs',
+      // Same RCS agent/number as Henry's Real Estate (RCS) above, by design
+      // — this demo is told apart purely by the pre-filled greeting text
+      // below (the backend keys off the word "ticketing" in it, see
+      // websocketcalls/lib/demoRouter.js). No separate agent to register.
+      rcsServiceId: 'henry_rcs_demo3_byrrgzuw_agent@rbm.goog',
+      botName: 'Vonage RCS Demo-Henry',
+      greeting: (name) => `Hi, Im ${name} — Welcome to the Ticketing demo!`,
+      description: 'A live event ticketing assistant for the Rolex Monte-Carlo Masters — retrieve your e-ticket, order in-seat food & merch, and get event-day info, all over RCS rich cards.',
+      highlights: [
+        'Upload a photo of your ticket — Claude reads seat, gate, date & price back to you',
+        'Conversational in-seat food & merch ordering, delivered or collect-at-stand',
+        'Rich cards for e-tickets, event schedule & shuttle info',
+        'Contact us — escalates to a real PSTN phone call, same as the Real Estate demo',
+      ],
+    },
     // {
     //   id: 'next-demo-id',
     //   label: 'Next Demo Name',
