@@ -659,7 +659,24 @@
 
     const qrEl = document.getElementById('qrcode');
     qrEl.innerHTML = '';
-    qr = new QRCode(qrEl, { text: url, width: 220, height: 220, colorDark: '#10254d', colorLight: '#ffffff' });
+    // correctLevel: L (lowest error-correction, highest data capacity) —
+    // the qrcodejs library defaults to H, which throws 'code length
+    // overflow' once the officially Vonage-generated deep link (much
+    // longer than the hand-built sms: fallback) has loaded and a greeting
+    // is appended. L still scans reliably; needed headroom outweighs the
+    // small resilience tradeoff for a demo QR shown on a controlled screen.
+    // Wrapped in try/catch on top of that: this used to throw straight
+    // out of refreshDemo(), which registerTester() calls inside its own
+    // try block — surfacing here as a wildly misleading 'Network error
+    // registering that number' even though registration had succeeded.
+    // Now it degrades to a text fallback instead, and the Open link /
+    // raw link below (which don't depend on the QR rendering) still work.
+    try {
+      qr = new QRCode(qrEl, { text: url, width: 220, height: 220, colorDark: '#10254d', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.L });
+    } catch (err) {
+      console.error('QR code rendering failed:', err.message);
+      qrEl.innerHTML = '<p style="font-size:13px;color:#b91c1c;padding:8px;">Could not render the QR code (link too long) — use the "Open" button or raw link below instead.</p>';
+    }
 
     const openLink = document.getElementById('openLink');
     openLink.href = url;
