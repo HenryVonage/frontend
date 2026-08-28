@@ -552,14 +552,36 @@
     // The tester-registration step only applies to the RCS demo — its
     // agent isn't fully launched with carriers/Google yet, so only
     // allow-listed test numbers can actually open a chat with it (see
-    // registerTester() below). Reset any previous status when switching
-    // demos so a stale "Registered!" message doesn't linger.
+    // registerTester() below).
     document.getElementById('testerBox').classList.toggle('visible', demo.channel === 'rcs');
     const status = document.getElementById('testerStatus');
-    status.textContent = '';
-    status.className = 'tester-status';
-    document.getElementById('testerConfirm').classList.remove('visible');
-    document.getElementById('testerAcceptedInvite').checked = false;
+    const confirmRow = document.getElementById('testerConfirm');
+    const acceptedBox = document.getElementById('testerAcceptedInvite');
+    const phoneInput = document.getElementById('testerPhone');
+
+    // Google's own RBM docs confirm re-registering an already-ACCEPTED
+    // tester device does NOT reset that acceptance, and every RCS demo
+    // entry here shares the same underlying agent/tester list — so a
+    // number that already confirmed the SMS invite once shouldn't have
+    // to repeat this step on every reload or demo switch. Remember it
+    // locally (this browser only) and skip straight to "ready to scan".
+    const remembered = demo.channel === 'rcs' ? loadConfirmedTester() : null;
+    if (remembered && !phoneInput.value.trim()) {
+      phoneInput.value = remembered.phone;
+    }
+    const alreadyConfirmed = !!(remembered && phoneInput.value.trim() === remembered.phone);
+
+    if (alreadyConfirmed) {
+      status.textContent = "You already confirmed this number's SMS invite before — no need to do it again.";
+      status.className = 'tester-status ok';
+      acceptedBox.checked = true;
+      confirmRow.classList.add('visible');
+    } else {
+      status.textContent = '';
+      status.className = 'tester-status';
+      confirmRow.classList.remove('visible');
+      acceptedBox.checked = false;
+    }
   }
 
   // Registers the phone number typed into #testerPhone as an allow-listed
@@ -598,9 +620,16 @@
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        status.textContent = "Registered! Google will text that number an invite — open it and tap Accept, then tick the box below.";
+        // If this exact number already confirmed the SMS invite on an
+        // earlier visit, don't make them tick the box again — Google
+        // doesn't reset acceptance on re-registration, so neither should we.
+        const remembered = loadConfirmedTester();
+        const alreadyConfirmed = !!(remembered && remembered.phone === phoneNumber);
+        status.textContent = alreadyConfirmed
+          ? "Registered! You already confirmed this number's SMS invite before, so you're all set."
+          : "Registered! Google will text that number an invite — open it and tap Accept, then tick the box below.";
         status.className = 'tester-status ok';
-        document.getElementById('testerAcceptedInvite').checked = false;
+        document.getElementById('testerAcceptedInvite').checked = alreadyConfirmed;
         confirmRow.classList.add('visible');
         refreshDemo();
       } else {
@@ -616,9 +645,48 @@
     }
   }
 
+  // Remembers, in this browser only, which phone number has already
+  // confirmed the RCS tester SMS invite — so updateDemoInfo() can skip
+  // re-asking for it later. Purely a local UX convenience; the real
+  // source of truth is Google/Vonage's own tester list, server-side.
+  const TESTER_STORAGE_KEY = 'vonageDemo.rcsTesterConfirmed';
+
+  function loadConfirmedTester() {
+    try {
+      const raw = localStorage.getItem(TESTER_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      return parsed && parsed.phone ? parsed : null;
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function saveConfirmedTester(phone) {
+    try {
+      localStorage.setItem(TESTER_STORAGE_KEY, JSON.stringify({ phone, confirmedAt: new Date().toISOString() }));
+    } catch (err) {
+      // localStorage unavailable (private browsing, etc.) — the demo still
+      // works, it just re-asks next time instead of remembering.
+    }
+  }
+
+  function clearConfirmedTester() {
+    try {
+      localStorage.removeItem(TESTER_STORAGE_KEY);
+    } catch (err) {}
+  }
+
   // Re-runs refreshDemo() whenever the checkbox changes so the "Try the
-  // demo" copy below reflects whether the SMS invite has been accepted yet.
+  // demo" copy below reflects whether the SMS invite has been accepted
+  // yet, and persists/clears the remembered confirmation to match.
   function onTesterInviteToggle() {
+    const checkbox = document.getElementById('testerAcceptedInvite');
+    const phone = document.getElementById('testerPhone').value.trim();
+    if (checkbox.checked && phone) {
+      saveConfirmedTester(phone);
+    } else if (!checkbox.checked) {
+      clearConfirmedTester();
+    }
     refreshDemo();
   }
 
