@@ -444,6 +444,28 @@
         'Contact us — escalates to a real PSTN phone call, same as the Real Estate demo',
       ],
     },
+    {
+      id: 'henry-ticketing-whatsapp',
+      label: 'Rolex Monte-Carlo Masters — Ticketing (WhatsApp)',
+      channel: 'whatsapp',
+      // Its OWN dedicated WABA number — unlike the two RCS demos (which
+      // share one RBM agent and are told apart by greeting text), this
+      // demo is told apart from Henry's Real Estate WhatsApp demo purely
+      // by which number the visitor messages (see
+      // websocketcalls/lib/whatsappFlow.js's routing). No keyword needed
+      // in the greeting for routing to work, but one's kept below anyway
+      // for a personalized first message and for consistency with the
+      // other demos' greeting style.
+      wabaNumber: '447312277021',
+      greeting: (name) => `Hi, Im ${name} — Welcome to the Ticketing demo!`,
+      description: 'The same live event ticketing assistant as the RCS version, rebuilt for WhatsApp — categorized FAQ menu, native product catalog ordering, and WhatsApp Calling with an AI agent for live support.',
+      highlights: [
+        'Approved WhatsApp templates for priority access, order confirmation & e-ticket delivery (real PDF attachment)',
+        'FAQ as a categorized list menu, and in-seat food/merch ordering via WhatsApp\'s native product catalog',
+        'WhatsApp Calling — voice call placed inside WhatsApp, answered by a dedicated ticketing AI agent',
+        'Win a prize by completing a WhatsApp Flow survey — a real multi-screen native form, not just a text reply',
+      ],
+    },
     // {
     //   id: 'next-demo-id',
     //   label: 'Next Demo Name',
