@@ -249,17 +249,24 @@
   .tester-status.pending { color: #7c4a03; }
   .tester-confirm {
     display: none;
-    align-items: flex-start;
-    gap: 8px;
+    align-items: center;
+    gap: 12px;
     margin-top: 10px;
     padding-top: 10px;
     border-top: 1px dashed #fde4bc;
   }
   .tester-confirm.visible { display: flex; }
   .tester-confirm input[type="checkbox"] {
-    margin-top: 2px;
-    width: auto;
-    margin-bottom: 0;
+    /* Deliberately much larger than the label text next to it — this is
+       the one click that actually gates the QR code (see refreshDemo()),
+       so it needs to read as the primary call-to-action, not a small
+       default browser checkbox easy to skim past. */
+    width: 28px;
+    height: 28px;
+    margin: 0;
+    flex-shrink: 0;
+    accent-color: #92400e;
+    cursor: pointer;
   }
   .tester-confirm label {
     font-size: 12.5px;
