@@ -448,15 +448,14 @@
       id: 'henry-ticketing-whatsapp',
       label: 'Rolex Monte-Carlo Masters — Ticketing (WhatsApp)',
       channel: 'whatsapp',
-      // Its OWN dedicated WABA number — unlike the two RCS demos (which
-      // share one RBM agent and are told apart by greeting text), this
-      // demo is told apart from Henry's Real Estate WhatsApp demo purely
-      // by which number the visitor messages (see
-      // websocketcalls/lib/whatsappFlow.js's routing). No keyword needed
-      // in the greeting for routing to work, but one's kept below anyway
-      // for a personalized first message and for consistency with the
-      // other demos' greeting style.
-      wabaNumber: '447312277021',
+      // Shares Henry's Real Estate WhatsApp number — a genuinely
+      // dedicated number (447312277021, from the original Node-RED flow)
+      // was never linked to the Vonage Application, so the first live
+      // test never reached the backend at all. Same trick as the two RCS
+      // demos sharing one agent: the backend tells this demo apart by the
+      // greeting text below (must keep saying "Welcome to the Ticketing
+      // demo!" — see websocketcalls/lib/demoRouter.js).
+      wabaNumber: '447520691413',
       greeting: (name) => `Hi, Im ${name} — Welcome to the Ticketing demo!`,
       description: 'The same live event ticketing assistant as the RCS version, rebuilt for WhatsApp — categorized FAQ menu, native product catalog ordering, and WhatsApp Calling with an AI agent for live support.',
       highlights: [
