@@ -389,9 +389,9 @@
 
   <aside id="videoPanel" class="video-panel">
     <div class="video-panel-inner">
-      <p class="video-caption">See the WhatsApp demo in action — please put the 🔊 sound on to hear the WhatsApp Calling feature 🗣️</p>
+      <p class="video-caption" id="videoCaptionText">See this demo in action.</p>
       <div class="video-embed">
-        <iframe src="https://drive.google.com/file/d/1BAm7wKHvhIfWnUy_IO_ijTilF_Vfyyp7/preview" allow="autoplay" allowfullscreen loading="lazy"></iframe>
+        <iframe id="videoFrame" src="" allow="autoplay" allowfullscreen loading="lazy"></iframe>
       </div>
     </div>
   </aside>
@@ -478,6 +478,12 @@
         'WhatsApp Calling — voice call placed inside WhatsApp itself',
         'Post-call recap sent back as a WhatsApp document template',
       ],
+      // Google Drive file id for the recorded walkthrough shown in the
+      // right-hand video panel (see updateDemoInfo()) — extracted here
+      // from what was previously a hardcoded <iframe src> so any demo can
+      // have its own recording just by adding this field.
+      recordingId: '1BAm7wKHvhIfWnUy_IO_ijTilF_Vfyyp7',
+      videoCaption: 'See the WhatsApp demo in action — please put the 🔊 sound on to hear the WhatsApp Calling feature 🗣️',
     },
     {
       id: 'henry-real-estate-rcs',
@@ -533,6 +539,8 @@
         'WhatsApp Calling — voice call placed inside WhatsApp, answered by a dedicated ticketing AI agent',
         'Win a prize by completing a WhatsApp Flow survey — a real multi-screen native form, not just a text reply',
       ],
+      recordingId: '1WQSE9VLxmyNdmQqe0E9zaz7Ethfuu6-2',
+      videoCaption: 'See the Ticketing WhatsApp demo in action — please put the 🔊 sound on to hear the WhatsApp Calling feature 🗣️',
     },
     // {
     //   id: 'next-demo-id',
@@ -639,18 +647,28 @@
     document.getElementById('archVoiceIcon').textContent = arch.voiceIcon;
     document.getElementById('archVoiceLabel').textContent = arch.voiceLabel;
 
-    // The recorded walkthrough video only exists for the WhatsApp Real
-    // Estate demo — show it (and widen the layout to fit it) only when
-    // that demo is selected. It's a Google Drive /preview embed rather
-    // than a direct <video> src: Drive's direct-download link only
-    // serves the raw file to the file's own owner without hitting the
-    // "can't scan for viruses" interstitial, which would break playback
-    // for real visitors, whereas /preview is Drive's own supported
-    // embed and works for anyone with view access.
+    // The recorded walkthrough video panel shows for any demo that
+    // declares a recordingId (currently Real Estate WhatsApp and
+    // Ticketing WhatsApp) — widens the layout to fit it only while
+    // visible. It's a Google Drive /preview embed rather than a direct
+    // <video> src: Drive's direct-download link only serves the raw file
+    // to the file's own owner without hitting the "can't scan for
+    // viruses" interstitial, which would break playback for real
+    // visitors, whereas /preview is Drive's own supported embed and
+    // works for anyone with view access. The iframe src is cleared
+    // whenever hidden so switching to a demo with no recording actually
+    // stops playback instead of leaving it running off-screen.
     const videoPanel = document.getElementById('videoPanel');
-    const showVideo = demo.id === 'henry-real-estate';
+    const videoFrame = document.getElementById('videoFrame');
+    const showVideo = !!demo.recordingId;
     videoPanel.classList.toggle('visible', showVideo);
     document.querySelector('main').classList.toggle('wide', showVideo);
+    if (showVideo) {
+      videoFrame.src = `https://drive.google.com/file/d/${demo.recordingId}/preview`;
+      document.getElementById('videoCaptionText').textContent = demo.videoCaption || 'See this demo in action.';
+    } else {
+      videoFrame.src = '';
+    }
 
     // The tester-registration step only applies to the RCS demo — its
     // agent isn't fully launched with carriers/Google yet, so only
