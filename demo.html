@@ -39,31 +39,33 @@
   nav a.active, nav a:hover { color: #fff; text-decoration: underline; }
   nav .brand { color: #fff; font-weight: 700; margin-right: auto; font-size: 16px; }
   main {
-    max-width: 640px;
+    max-width: 1060px;
     margin: 0 auto;
     padding: 40px 20px 80px;
-    transition: max-width 0.2s ease;
   }
-  /* Widened only while the video panel is showing (see updateDemoInfo()) —
-     stays at the original 640px reading width otherwise. */
-  main.wide { max-width: 1060px; }
   .layout-row {
     display: flex;
     gap: 28px;
     align-items: flex-start;
   }
   .layout-row .card { flex: 1 1 480px; max-width: 640px; }
-  /* Hidden by default; only shown for the WhatsApp Real Estate demo (see
-     updateDemoInfo() in the script below). Sticky so it stays in view
-     alongside the QR card while scrolling the architecture section. */
-  .video-panel {
-    display: none;
+  /* Always visible now — holds the video panel (itself still toggled per
+     demo, see updateDemoInfo()) stacked above the feedback form, so the
+     form has a permanent home beside the picker card instead of living at
+     the bottom of the page. Not sticky (the column can now run taller
+     than the viewport once the feedback form is included) — scrolls with
+     the page like everything else. */
+  .side-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
     flex: 1 1 320px;
     min-width: 260px;
     max-width: 380px;
-    position: sticky;
-    top: 24px;
   }
+  /* Hidden by default; only shown for demos with a recordingId (see
+     updateDemoInfo() in the script below). */
+  .video-panel { display: none; }
   .video-panel.visible { display: block; }
   .video-panel-inner {
     background: var(--card);
@@ -97,7 +99,7 @@
   @media (max-width: 880px) {
     .layout-row { flex-direction: column; }
     .layout-row .card { max-width: none; width: 100%; }
-    .video-panel { max-width: 100%; position: static; }
+    .side-column { max-width: 100%; }
   }
   h1 { font-size: 26px; margin-bottom: 6px; }
   p.lead { color: var(--muted); margin-top: 0; margin-bottom: 32px; }
@@ -334,12 +336,13 @@
     text-transform: none;
     letter-spacing: normal;
   }
+  /* Sits in .side-column now (below the video panel, or alone if the
+     selected demo has no recording) rather than centered full-width at
+     the bottom of the page — no more max-width/auto-margin centering. */
   .feedback-card {
-    max-width: 640px;
-    margin: 24px auto 0;
     background: var(--card);
     border-radius: 14px;
-    padding: 22px 24px;
+    padding: 18px 20px;
     box-shadow: 0 1px 3px rgba(16, 37, 77, 0.08), 0 8px 24px rgba(16, 37, 77, 0.06);
   }
   .feedback-card h2 {
@@ -352,12 +355,6 @@
     color: var(--muted);
     margin: 0 0 16px;
   }
-  .feedback-card .field-row {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .feedback-card .field-row > div { flex: 1 1 220px; }
   .feedback-card input[type="text"],
   .feedback-card input[type="email"],
   .feedback-card textarea {
@@ -465,12 +462,34 @@
     </div>
   </div>
 
-  <aside id="videoPanel" class="video-panel">
-    <div class="video-panel-inner">
-      <p class="video-caption" id="videoCaptionText">See this demo in action.</p>
-      <div class="video-embed">
-        <iframe id="videoFrame" src="" allow="autoplay" allowfullscreen loading="lazy"></iframe>
+  <aside class="side-column">
+    <div id="videoPanel" class="video-panel">
+      <div class="video-panel-inner">
+        <p class="video-caption" id="videoCaptionText">See this demo in action.</p>
+        <div class="video-embed">
+          <iframe id="videoFrame" src="" allow="autoplay" allowfullscreen loading="lazy"></iframe>
+        </div>
       </div>
+    </div>
+
+    <div class="feedback-card">
+      <h2>Questions or comments?</h2>
+      <p class="feedback-caption">Tell us what you think, or attach a photo/video of anything you ran into — we'll reply to the email you give us.</p>
+      <form id="feedbackForm" novalidate>
+        <label for="feedbackName">Your name (optional)</label>
+        <input type="text" id="feedbackName" name="name" placeholder="e.g. Jane" autocomplete="name">
+        <label for="feedbackEmail">Your email</label>
+        <input type="email" id="feedbackEmail" name="email" placeholder="e.g. jane@example.com" autocomplete="email" required>
+        <div class="field-error" id="feedbackEmailError">Please enter a valid email address (e.g. name@example.com).</div>
+        <label for="feedbackMessage">Your comment or question</label>
+        <textarea id="feedbackMessage" name="message" placeholder="What's on your mind?"></textarea>
+        <label for="feedbackFiles">Attach a photo or video (optional)</label>
+        <input type="file" id="feedbackFiles" name="files" accept="image/png,image/jpeg,video/*" multiple>
+        <p class="file-hint">PNG, JPG or video — up to 10MB total.</p>
+        <div class="field-error" id="feedbackFileError"></div>
+        <button type="submit" id="feedbackSubmitBtn">Send</button>
+        <div class="feedback-status" id="feedbackStatus"></div>
+      </form>
     </div>
   </aside>
   </div>
@@ -531,32 +550,6 @@
       <line x1="550" y1="45" x2="560" y2="90" stroke="#8b96ad" stroke-width="1" marker-end="url(#arrow)"></line>
       <line x1="550" y1="175" x2="560" y2="170" stroke="#8b96ad" stroke-width="1" marker-end="url(#arrow)"></line>
     </svg>
-  </div>
-
-  <div class="feedback-card">
-    <h2>Questions or comments?</h2>
-    <p class="feedback-caption">Tell us what you think, or attach a photo/video of anything you ran into — we'll reply to the email you give us.</p>
-    <form id="feedbackForm" novalidate>
-      <div class="field-row">
-        <div>
-          <label for="feedbackName">Your name (optional)</label>
-          <input type="text" id="feedbackName" name="name" placeholder="e.g. Jane" autocomplete="name">
-        </div>
-        <div>
-          <label for="feedbackEmail">Your email</label>
-          <input type="email" id="feedbackEmail" name="email" placeholder="e.g. jane@example.com" autocomplete="email" required>
-          <div class="field-error" id="feedbackEmailError">Please enter a valid email address (e.g. name@example.com).</div>
-        </div>
-      </div>
-      <label for="feedbackMessage">Your comment or question</label>
-      <textarea id="feedbackMessage" name="message" placeholder="What's on your mind?"></textarea>
-      <label for="feedbackFiles">Attach a photo or video (optional)</label>
-      <input type="file" id="feedbackFiles" name="files" accept="image/png,image/jpeg,video/*" multiple>
-      <p class="file-hint">PNG, JPG or video — up to 10MB total.</p>
-      <div class="field-error" id="feedbackFileError"></div>
-      <button type="submit" id="feedbackSubmitBtn">Send</button>
-      <div class="feedback-status" id="feedbackStatus"></div>
-    </form>
   </div>
 </main>
 
@@ -766,7 +759,6 @@
     const videoFrame = document.getElementById('videoFrame');
     const showVideo = !!demo.recordingId;
     videoPanel.classList.toggle('visible', showVideo);
-    document.querySelector('main').classList.toggle('wide', showVideo);
     if (showVideo) {
       videoFrame.src = `https://drive.google.com/file/d/${demo.recordingId}/preview`;
       document.getElementById('videoCaptionText').textContent = demo.videoCaption || 'See this demo in action.';
