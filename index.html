@@ -73,7 +73,12 @@
     border-radius: 14px;
     padding: 22px 24px;
     box-shadow: 0 1px 3px rgba(16, 37, 77, 0.08), 0 8px 24px rgba(16, 37, 77, 0.06);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
   }
+  .demo-card:hover { box-shadow: 0 2px 6px rgba(16, 37, 77, 0.12), 0 12px 28px rgba(16, 37, 77, 0.1); transform: translateY(-1px); }
   .demo-card h3 { margin: 0 0 8px; font-size: 16px; color: var(--navy-dark); }
   .demo-card p { margin: 0 0 12px; font-size: 13.5px; line-height: 1.55; color: #333; }
   .channel-tags { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -137,22 +142,22 @@
 
   <h2 class="section-title">What's in this portfolio</h2>
   <div class="demo-grid">
-    <div class="demo-card">
+    <a class="demo-card" href="demo.html">
       <h3>Henry's Real Estate</h3>
       <p>A property assistant that answers questions, sends listings, and can place a real voice call inside WhatsApp — with a post-call recap sent straight back to the chat.</p>
       <div class="channel-tags">
         <span class="channel-tag whatsapp">WhatsApp</span>
         <span class="channel-tag rcs">RCS</span>
       </div>
-    </div>
-    <div class="demo-card">
+    </a>
+    <a class="demo-card" href="demo.html">
       <h3>Rolex Monte-Carlo Masters — Ticketing</h3>
       <p>A live event ticketing assistant: read a photo of your ticket, order in-seat food &amp; merch, get event-day info, or escalate to a real phone call for live support.</p>
       <div class="channel-tags">
         <span class="channel-tag whatsapp">WhatsApp</span>
         <span class="channel-tag rcs">RCS</span>
       </div>
-    </div>
+    </a>
   </div>
 
   <h2 class="section-title">Explore further</h2>
