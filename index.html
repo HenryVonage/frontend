@@ -3,153 +3,172 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WebSocket Calls</title>
+<title>Vonage AI Demos</title>
 <style>
+  :root {
+    --navy: #1a3d7c;
+    --navy-dark: #10254d;
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --text: #1f2430;
+    --muted: #6b7280;
+    --accent: #22c55e;
+  }
+  * { box-sizing: border-box; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-    max-width: 640px;
-    margin: 40px auto;
-    padding: 0 20px;
-    color: #1a1a1a;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
   }
-  h1 {
-    font-size: 22px;
-  }
-  #status {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 13px;
-    font-weight: 600;
-    background: #eee;
-    color: #666;
-  }
-  #status.connected {
-    background: #d4f4dd;
-    color: #1a7a3c;
-  }
-  #status.disconnected {
-    background: #fbdada;
-    color: #a3222c;
-  }
-  #log {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    height: 260px;
-    overflow-y: auto;
-    padding: 12px;
-    margin: 16px 0;
-    background: #fafafa;
-    font-family: ui-monospace, Menlo, monospace;
-    font-size: 13px;
-  }
-  #log div {
-    margin-bottom: 6px;
-  }
-  .sent { color: #0b5fff; }
-  .received { color: #1a7a3c; }
-  .system { color: #888; font-style: italic; }
-  form {
+  nav {
+    background: var(--navy);
+    padding: 14px 24px;
     display: flex;
-    gap: 8px;
+    gap: 20px;
+    align-items: center;
+    flex-wrap: wrap;
   }
-  input[type="text"] {
-    flex: 1;
-    padding: 10px 12px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 14px;
+  nav a { color: #dbe4ff; text-decoration: none; font-size: 14px; font-weight: 500; }
+  nav a.active, nav a:hover { color: #fff; text-decoration: underline; }
+  nav .brand { color: #fff; font-weight: 700; margin-right: auto; font-size: 16px; }
+  main { max-width: 880px; margin: 0 auto; padding: 40px 20px 80px; }
+  .demo-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: #eef2fb;
+    color: var(--navy);
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 18px;
   }
-  button {
-    padding: 10px 18px;
-    border: none;
-    border-radius: 6px;
-    background: #1a1a1a;
-    color: white;
-    font-size: 14px;
-    cursor: pointer;
+  h1 { font-size: 30px; margin: 0 0 10px; line-height: 1.25; }
+  p.lead { color: var(--muted); margin-top: 0; margin-bottom: 24px; font-size: 15.5px; line-height: 1.6; max-width: 620px; }
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 40px; }
+  .btn {
+    display: inline-block;
+    padding: 12px 22px;
+    border-radius: 8px;
+    font-size: 14.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s ease;
   }
-  button:disabled {
-    background: #aaa;
-    cursor: not-allowed;
+  .btn-primary { background: var(--navy); color: #fff; }
+  .btn-primary:hover { background: var(--navy-dark); }
+  .btn-secondary { background: #fff; color: var(--navy); border: 1px solid #d7dce6; }
+  .btn-secondary:hover { background: #eef2fb; }
+  h2.section-title { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 0 0 14px; }
+  .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .demo-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 22px 24px;
+    box-shadow: 0 1px 3px rgba(16, 37, 77, 0.08), 0 8px 24px rgba(16, 37, 77, 0.06);
+  }
+  .demo-card h3 { margin: 0 0 8px; font-size: 16px; color: var(--navy-dark); }
+  .demo-card p { margin: 0 0 12px; font-size: 13.5px; line-height: 1.55; color: #333; }
+  .channel-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .channel-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 999px;
+  }
+  .channel-tag.whatsapp { background: #dcfce7; color: #15803d; }
+  .channel-tag.rcs { background: #dbeafe; color: #1d4ed8; }
+  .link-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .link-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 20px 22px;
+    box-shadow: 0 1px 3px rgba(16, 37, 77, 0.08), 0 8px 24px rgba(16, 37, 77, 0.06);
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+  }
+  .link-card:hover { box-shadow: 0 2px 6px rgba(16, 37, 77, 0.12), 0 12px 28px rgba(16, 37, 77, 0.1); transform: translateY(-1px); }
+  .link-card h3 { margin: 0 0 6px; font-size: 15px; color: var(--navy-dark); }
+  .link-card p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .link-card .arrow { color: var(--navy); font-weight: 700; }
+  p.note {
+    max-width: 620px;
+    margin: 40px auto 0;
+    font-size: 13px;
+    color: var(--muted);
   }
 </style>
 </head>
 <body>
 
-<h1>WebSocket Calls <span id="status">connecting…</span></h1>
+<nav>
+  <span class="brand">Vonage AI Demos</span>
+  <a href="index.html" class="active">Home</a>
+  <a href="demo.html">Try a Demo</a>
+  <a href="logs.html">Logs</a>
+  <a href="architecture.html">How it works</a>
+</nav>
 
-<div id="log"></div>
+<main>
+  <span class="demo-badge">Demo Portfolio</span>
+  <h1>AI agents that talk, text, and call — over WhatsApp, RCS &amp; voice</h1>
+  <p class="lead">A portfolio of live, working demos built on Vonage's Messages and Voice APIs, orchestrated by Claude AI and powered by ElevenLabs for voice — pick a demo, scan a QR code, and start a real conversation with it.</p>
 
-<form id="messageForm">
-  <input type="text" id="messageInput" placeholder="Type a message…" autocomplete="off" disabled>
-  <button type="submit" id="sendBtn" disabled>Send</button>
-</form>
+  <div class="cta-row">
+    <a href="demo.html" class="btn btn-primary">Try a demo →</a>
+    <a href="architecture.html" class="btn btn-secondary">See how it works</a>
+  </div>
 
-<script>
-  // Update this to your Render service URL
-  const WS_URL = 'wss://websocketcalls.onrender.com';
+  <h2 class="section-title">What's in this portfolio</h2>
+  <div class="demo-grid">
+    <div class="demo-card">
+      <h3>Henry's Real Estate</h3>
+      <p>A property assistant that answers questions, sends listings, and can place a real voice call inside WhatsApp — with a post-call recap sent straight back to the chat.</p>
+      <div class="channel-tags">
+        <span class="channel-tag whatsapp">WhatsApp</span>
+        <span class="channel-tag rcs">RCS</span>
+      </div>
+    </div>
+    <div class="demo-card">
+      <h3>Rolex Monte-Carlo Masters — Ticketing</h3>
+      <p>A live event ticketing assistant: read a photo of your ticket, order in-seat food &amp; merch, get event-day info, or escalate to a real phone call for live support.</p>
+      <div class="channel-tags">
+        <span class="channel-tag whatsapp">WhatsApp</span>
+        <span class="channel-tag rcs">RCS</span>
+      </div>
+    </div>
+  </div>
 
-  const statusEl = document.getElementById('status');
-  const logEl = document.getElementById('log');
-  const form = document.getElementById('messageForm');
-  const input = document.getElementById('messageInput');
-  const sendBtn = document.getElementById('sendBtn');
+  <h2 class="section-title">Explore further</h2>
+  <div class="link-grid">
+    <a class="link-card" href="architecture.html">
+      <h3>How it works <span class="arrow">→</span></h3>
+      <p>The integrations and moving parts behind each demo — useful if you want to build your own.</p>
+    </a>
+    <a class="link-card" href="logs.html">
+      <h3>Live logs <span class="arrow">→</span></h3>
+      <p>Watch every inbound message, decision, and call event stream in real time — no login required.</p>
+    </a>
+  </div>
 
-  function logMessage(text, cls) {
-    const line = document.createElement('div');
-    line.className = cls;
-    line.textContent = text;
-    logEl.appendChild(line);
-    logEl.scrollTop = logEl.scrollHeight;
-  }
-
-  function setStatus(state, text) {
-    statusEl.textContent = text;
-    statusEl.className = state;
-  }
-
-  function connect() {
-    setStatus('', 'connecting…');
-    logMessage('Connecting to ' + WS_URL + ' …', 'system');
-
-    const socket = new WebSocket(WS_URL);
-
-    socket.onopen = () => {
-      setStatus('connected', 'connected');
-      logMessage('Connected.', 'system');
-      input.disabled = false;
-      sendBtn.disabled = false;
-    };
-
-    socket.onmessage = (event) => {
-      logMessage('← ' + event.data, 'received');
-    };
-
-    socket.onerror = () => {
-      logMessage('Connection error.', 'system');
-    };
-
-    socket.onclose = () => {
-      setStatus('disconnected', 'disconnected');
-      logMessage('Disconnected. Retrying in 3s…', 'system');
-      input.disabled = true;
-      sendBtn.disabled = true;
-      setTimeout(connect, 3000);
-    };
-
-    form.onsubmit = (e) => {
-      e.preventDefault();
-      const msg = input.value.trim();
-      if (!msg || socket.readyState !== WebSocket.OPEN) return;
-      socket.send(msg);
-      logMessage('→ ' + msg, 'sent');
-      input.value = '';
-    };
-  }
-
-  connect();
-</script>
+  <p class="note">More demos are on the way — this portfolio is built to keep growing.</p>
+</main>
 
 </body>
 </html>
