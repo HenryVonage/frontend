@@ -46,7 +46,12 @@
   .layout-row {
     display: flex;
     gap: 28px;
-    align-items: flex-start;
+    /* Stretch (not flex-start) so the QR-code card and the side column
+       always end at the same height, whichever one has more content —
+       otherwise the shorter box trails off mid-page next to the taller
+       one, which looked sloppy once the feedback form made the side
+       column noticeably taller than the QR card for most demos. */
+    align-items: stretch;
   }
   .layout-row .card { flex: 1 1 480px; max-width: 640px; }
   /* Always visible now — holds the video panel (itself still toggled per
@@ -63,6 +68,13 @@
     min-width: 260px;
     max-width: 380px;
   }
+  /* When the QR card is the taller of the two (demos with no video, so
+     the side column is just the feedback card alone), let the feedback
+     card itself grow to reach the same bottom edge instead of leaving
+     blank tracking space below it inside .side-column. Harmless when the
+     video panel is also showing — there's rarely leftover space to fill
+     in that case. */
+  .side-column .feedback-card { flex: 1 1 auto; }
   /* Hidden by default; only shown for demos with a recordingId (see
      updateDemoInfo() in the script below). */
   .video-panel { display: none; }
