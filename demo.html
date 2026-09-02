@@ -219,6 +219,58 @@
     border-radius: 999px;
     margin-bottom: 18px;
   }
+  .family-picker {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .family-card {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: #fbfcfe;
+    border: 1.5px solid #d7dce6;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .family-card:hover { border-color: var(--navy); }
+  .family-card.selected {
+    border-color: var(--navy);
+    background: #eef2fb;
+    color: var(--navy-dark);
+  }
+  .channel-picker-label { margin-top: -8px; }
+  .channel-picker {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .channel-chip {
+    flex: 1;
+    text-align: center;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1.5px solid #d7dce6;
+    background: #fbfcfe;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  }
+  .channel-chip:hover { border-color: var(--navy); }
+  .channel-chip.selected.whatsapp { border-color: #15803d; background: #dcfce7; color: #15803d; }
+  .channel-chip.selected.rcs { border-color: #1d4ed8; background: #dbeafe; color: #1d4ed8; }
   .demo-info {
     margin-bottom: 20px;
     padding: 16px 18px;
@@ -443,8 +495,13 @@
     <label for="firstName">Your first name</label>
     <input type="text" id="firstName" placeholder="e.g. Henry" autocomplete="given-name">
 
-    <label for="demoSelect">Choose a demo</label>
-    <select id="demoSelect"></select>
+    <label>Choose a demo</label>
+    <div id="familyPicker" class="family-picker"></div>
+
+    <label id="channelPickerLabel" class="channel-picker-label">Choose a channel</label>
+    <div id="channelPicker" class="channel-picker"></div>
+
+    <select id="demoSelect" style="display:none" aria-hidden="true" tabindex="-1"></select>
 
     <div id="demoInfo" class="demo-info"></div>
 
@@ -570,10 +627,20 @@
   // other page changes required, as long as the entry's channel is either
   // 'whatsapp' (needs wabaNumber, approved greeting template) or 'rcs'
   // (needs rcsServiceId + botName, from the RBM agent's deep-link config).
+  // family/familyLabel group same-demo-different-channel entries under one
+  // picker card (see FAMILIES below) — reuse an existing family id to add
+  // a new channel to an existing demo, or use a new one to add a whole new
+  // demo card.
   const DEMOS = [
     {
       id: 'henry-real-estate',
       label: "Henry's Real Estate (WhatsApp)",
+      // family/familyLabel group demos that are "the same demo, different
+      // channel" under one card in the picker (see FAMILIES below) — every
+      // demo sharing a family id shows up as channel chips under one
+      // family card instead of its own separate picker entry.
+      family: 'real-estate',
+      familyLabel: "Henry's Real Estate",
       channel: 'whatsapp',
       wabaNumber: '447520691413', // Vonage Estate WABA
       // No apostrophes in the greeting text — some deep-link/QR consumers
@@ -597,6 +664,8 @@
     {
       id: 'henry-real-estate-rcs',
       label: "Henry's Real Estate (RCS)",
+      family: 'real-estate',
+      familyLabel: "Henry's Real Estate",
       channel: 'rcs',
       rcsServiceId: 'henry_rcs_demo3_byrrgzuw_agent@rbm.goog',
       botName: 'Vonage RCS Demo-Henry',
@@ -612,6 +681,8 @@
     {
       id: 'henry-ticketing-rcs',
       label: 'Rolex Monte-Carlo Masters — Ticketing (RCS)',
+      family: 'ticketing',
+      familyLabel: 'Rolex Monte-Carlo Masters — Ticketing',
       channel: 'rcs',
       // Same RCS agent/number as Henry's Real Estate (RCS) above, by design
       // — this demo is told apart purely by the pre-filled greeting text
@@ -631,6 +702,8 @@
     {
       id: 'henry-ticketing-whatsapp',
       label: 'Rolex Monte-Carlo Masters — Ticketing (WhatsApp)',
+      family: 'ticketing',
+      familyLabel: 'Rolex Monte-Carlo Masters — Ticketing',
       channel: 'whatsapp',
       // Shares Henry's Real Estate WhatsApp number — a genuinely
       // dedicated number (447312277021, from the original Node-RED flow)
@@ -654,6 +727,8 @@
     // {
     //   id: 'next-demo-id',
     //   label: 'Next Demo Name',
+    //   family: 'next-demo-family',
+    //   familyLabel: 'Next Demo Name',
     //   channel: 'whatsapp' | 'rcs',
     //   ...channel-specific fields above,
     //   greeting: (name) => `Hi, I'm ${name} — Welcome to <Next Demo> demo!`,
@@ -662,6 +737,13 @@
     // },
   ];
 
+  // `select` stays the single source of truth for "which demo is currently
+  // active" — every function below (updateDemoInfo, refreshDemo, the
+  // feedback handler) reads select.value exactly as it did when this was a
+  // real <select>. It's now hidden and driven programmatically by the
+  // family/channel picker below instead of by the user directly, so its
+  // own 'change' event is never used — callers call refreshAll() directly
+  // once they've set select.value.
   const select = document.getElementById('demoSelect');
   DEMOS.forEach((demo) => {
     const opt = document.createElement('option');
@@ -669,6 +751,104 @@
     opt.textContent = demo.label;
     select.appendChild(opt);
   });
+
+  // Groups DEMOS entries sharing a `family` id under one picker card, e.g.
+  // "Henry's Real Estate" → { whatsapp: 'henry-real-estate', rcs:
+  // 'henry-real-estate-rcs' }. Preserves DEMOS' own order (Object.keys on
+  // an object built by insertion order, and FAMILIES.push in DEMOS order),
+  // so the picker's card/chip order always matches the DEMOS array above.
+  const FAMILIES = [];
+  DEMOS.forEach((demo) => {
+    let fam = FAMILIES.find((f) => f.id === demo.family);
+    if (!fam) {
+      fam = { id: demo.family, label: demo.familyLabel, channels: {} };
+      FAMILIES.push(fam);
+    }
+    fam.channels[demo.channel] = demo.id;
+  });
+
+  const CHANNEL_CHIP_LABEL = { whatsapp: 'WhatsApp', rcs: 'RCS' };
+  const familyPickerEl = document.getElementById('familyPicker');
+  const channelPickerEl = document.getElementById('channelPicker');
+  const channelPickerLabel = document.getElementById('channelPickerLabel');
+
+  // Defaults to DEMOS[0]'s family/channel — matches the old <select>'s
+  // default behavior of auto-selecting its first <option>.
+  let selectedFamilyId = DEMOS[0].family;
+  let selectedChannel = DEMOS[0].channel;
+
+  function currentFamily() {
+    return FAMILIES.find((f) => f.id === selectedFamilyId);
+  }
+
+  function renderFamilyPicker() {
+    familyPickerEl.innerHTML = '';
+    FAMILIES.forEach((fam) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'family-card' + (fam.id === selectedFamilyId ? ' selected' : '');
+      btn.setAttribute('aria-pressed', String(fam.id === selectedFamilyId));
+      btn.textContent = fam.label;
+      btn.addEventListener('click', () => selectFamily(fam.id));
+      familyPickerEl.appendChild(btn);
+    });
+  }
+
+  // Only rendered when the selected family actually has more than one
+  // channel — a future demo with just one channel skips the chip row
+  // entirely rather than showing a single, unclickable-feeling option.
+  function renderChannelPicker() {
+    const fam = currentFamily();
+    const channels = Object.keys(fam.channels);
+    channelPickerEl.innerHTML = '';
+    const showPicker = channels.length > 1;
+    channelPickerLabel.style.display = showPicker ? '' : 'none';
+    channelPickerEl.style.display = showPicker ? '' : 'none';
+    channels.forEach((ch) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `channel-chip ${ch}` + (ch === selectedChannel ? ' selected' : '');
+      btn.setAttribute('aria-pressed', String(ch === selectedChannel));
+      btn.textContent = CHANNEL_CHIP_LABEL[ch] || ch;
+      btn.addEventListener('click', () => selectChannel(ch));
+      channelPickerEl.appendChild(btn);
+    });
+  }
+
+  // Resolves (selectedFamilyId, selectedChannel) to a real DEMOS entry,
+  // falling back to the family's first available channel if the
+  // previously-selected channel doesn't exist on the newly-picked family
+  // (e.g. a future family that only has WhatsApp) — then re-renders both
+  // pickers (so .selected styling stays in sync) and refreshes the QR /
+  // demo-info panel exactly as the old select's 'change' handler did.
+  function applyDemoSelection() {
+    const fam = currentFamily();
+    if (!fam.channels[selectedChannel]) {
+      selectedChannel = Object.keys(fam.channels)[0];
+    }
+    select.value = fam.channels[selectedChannel];
+    renderFamilyPicker();
+    renderChannelPicker();
+    refreshAll();
+  }
+
+  function selectFamily(familyId) {
+    if (familyId === selectedFamilyId) return;
+    selectedFamilyId = familyId;
+    // Sticky channel across families where possible: if the demo you were
+    // just looking at was on RCS and the new family also has an RCS demo,
+    // stay on RCS instead of resetting to that family's first channel.
+    applyDemoSelection();
+  }
+
+  function selectChannel(channel) {
+    if (channel === selectedChannel) return;
+    selectedChannel = channel;
+    applyDemoSelection();
+  }
+
+  renderFamilyPicker();
+  renderChannelPicker();
 
   const API_BASE = 'https://websocketcalls.onrender.com';
 
@@ -1064,7 +1244,10 @@
     refreshDemo();
   }
 
-  select.addEventListener('change', refreshAll);
+  // No 'change' listener on select itself — it's hidden and only ever
+  // written to programmatically (see applyDemoSelection() above), which
+  // doesn't fire a real 'change' event, so callers that set it call
+  // refreshAll() directly instead.
   document.getElementById('firstName').addEventListener('input', refreshDemo);
   refreshAll();
 
