@@ -334,6 +334,84 @@
     text-transform: none;
     letter-spacing: normal;
   }
+  .feedback-card {
+    max-width: 640px;
+    margin: 24px auto 0;
+    background: var(--card);
+    border-radius: 14px;
+    padding: 22px 24px;
+    box-shadow: 0 1px 3px rgba(16, 37, 77, 0.08), 0 8px 24px rgba(16, 37, 77, 0.06);
+  }
+  .feedback-card h2 {
+    font-size: 15px;
+    margin: 0 0 4px;
+    color: var(--navy-dark);
+  }
+  .feedback-card .feedback-caption {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin: 0 0 16px;
+  }
+  .feedback-card .field-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .feedback-card .field-row > div { flex: 1 1 220px; }
+  .feedback-card input[type="text"],
+  .feedback-card input[type="email"],
+  .feedback-card textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d7dce6;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+  .feedback-card textarea { resize: vertical; min-height: 80px; }
+  .feedback-card input[type="email"].invalid {
+    border-color: #dc2626;
+  }
+  .feedback-card .field-error {
+    display: none;
+    font-size: 12px;
+    color: #b91c1c;
+    margin: -10px 0 12px;
+  }
+  .feedback-card .field-error.visible { display: block; }
+  .feedback-card input[type="file"] {
+    display: block;
+    width: 100%;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .feedback-card .file-hint {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+  .feedback-card button {
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    padding: 11px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .feedback-card button:hover { background: var(--navy-dark); }
+  .feedback-card button:disabled { background: #9aa8c7; cursor: not-allowed; }
+  .feedback-status {
+    margin-top: 12px;
+    font-size: 13px;
+    display: none;
+  }
+  .feedback-status.visible { display: block; }
+  .feedback-status.ok { color: #15803d; }
+  .feedback-status.error { color: #b91c1c; }
 </style>
 </head>
 <body>
@@ -453,6 +531,32 @@
       <line x1="550" y1="45" x2="560" y2="90" stroke="#8b96ad" stroke-width="1" marker-end="url(#arrow)"></line>
       <line x1="550" y1="175" x2="560" y2="170" stroke="#8b96ad" stroke-width="1" marker-end="url(#arrow)"></line>
     </svg>
+  </div>
+
+  <div class="feedback-card">
+    <h2>Questions or comments?</h2>
+    <p class="feedback-caption">Tell us what you think, or attach a photo/video of anything you ran into — we'll reply to the email you give us.</p>
+    <form id="feedbackForm" novalidate>
+      <div class="field-row">
+        <div>
+          <label for="feedbackName">Your name (optional)</label>
+          <input type="text" id="feedbackName" name="name" placeholder="e.g. Jane" autocomplete="name">
+        </div>
+        <div>
+          <label for="feedbackEmail">Your email</label>
+          <input type="email" id="feedbackEmail" name="email" placeholder="e.g. jane@example.com" autocomplete="email" required>
+          <div class="field-error" id="feedbackEmailError">Please enter a valid email address (e.g. name@example.com).</div>
+        </div>
+      </div>
+      <label for="feedbackMessage">Your comment or question</label>
+      <textarea id="feedbackMessage" name="message" placeholder="What's on your mind?"></textarea>
+      <label for="feedbackFiles">Attach a photo or video (optional)</label>
+      <input type="file" id="feedbackFiles" name="files" accept="image/png,image/jpeg,video/*" multiple>
+      <p class="file-hint">PNG, JPG or video — up to 10MB total.</p>
+      <div class="field-error" id="feedbackFileError"></div>
+      <button type="submit" id="feedbackSubmitBtn">Send</button>
+      <div class="feedback-status" id="feedbackStatus"></div>
+    </form>
   </div>
 </main>
 
@@ -959,6 +1063,93 @@
   select.addEventListener('change', refreshAll);
   document.getElementById('firstName').addEventListener('input', refreshDemo);
   refreshAll();
+
+  // --- Feedback form: comment/question + optional photo/video, emailed to
+  // Henry via the backend's /api/feedback (see server.js +
+  // lib/feedbackMailer.js) ---
+  const FEEDBACK_MAX_TOTAL_BYTES = 10 * 1024 * 1024;
+  // Same intentionally-simple shape as the server-side check in
+  // lib/feedbackMailer.js — this is a first line of defense so a visitor
+  // gets instant feedback on an obvious typo; the backend re-validates
+  // regardless, since client-side checks are never trustworthy alone.
+  const FEEDBACK_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const feedbackForm = document.getElementById('feedbackForm');
+  const feedbackEmailInput = document.getElementById('feedbackEmail');
+  const feedbackEmailError = document.getElementById('feedbackEmailError');
+  const feedbackFilesInput = document.getElementById('feedbackFiles');
+  const feedbackFileError = document.getElementById('feedbackFileError');
+  const feedbackStatus = document.getElementById('feedbackStatus');
+  const feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
+
+  function isValidFeedbackEmail(value) {
+    return FEEDBACK_EMAIL_RE.test(value.trim());
+  }
+
+  feedbackEmailInput.addEventListener('input', () => {
+    feedbackEmailInput.classList.remove('invalid');
+    feedbackEmailError.classList.remove('visible');
+  });
+
+  feedbackFilesInput.addEventListener('change', () => {
+    const total = Array.from(feedbackFilesInput.files).reduce((sum, f) => sum + f.size, 0);
+    if (total > FEEDBACK_MAX_TOTAL_BYTES) {
+      feedbackFileError.textContent = `Selected files total ${(total / 1024 / 1024).toFixed(1)}MB — please keep it under 10MB.`;
+      feedbackFileError.classList.add('visible');
+    } else {
+      feedbackFileError.classList.remove('visible');
+    }
+  });
+
+  feedbackForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = feedbackEmailInput.value.trim();
+    let valid = true;
+    if (!isValidFeedbackEmail(email)) {
+      feedbackEmailInput.classList.add('invalid');
+      feedbackEmailError.classList.add('visible');
+      valid = false;
+    }
+    const totalBytes = Array.from(feedbackFilesInput.files).reduce((sum, f) => sum + f.size, 0);
+    if (totalBytes > FEEDBACK_MAX_TOTAL_BYTES) {
+      feedbackFileError.textContent = `Selected files total ${(totalBytes / 1024 / 1024).toFixed(1)}MB — please keep it under 10MB.`;
+      feedbackFileError.classList.add('visible');
+      valid = false;
+    }
+    if (!valid) return;
+
+    const currentDemo = DEMOS.find((d) => d.id === select.value);
+
+    const formData = new FormData();
+    formData.append('name', document.getElementById('feedbackName').value.trim());
+    formData.append('email', email);
+    formData.append('message', document.getElementById('feedbackMessage').value.trim());
+    formData.append('demoLabel', currentDemo ? currentDemo.label : '');
+    Array.from(feedbackFilesInput.files).forEach((file) => formData.append('files', file));
+
+    feedbackSubmitBtn.disabled = true;
+    feedbackSubmitBtn.textContent = 'Sending…';
+    feedbackStatus.className = 'feedback-status';
+
+    try {
+      const res = await fetch(`${API_BASE}/api/feedback`, { method: 'POST', body: formData });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || 'Something went wrong. Please try again.');
+      }
+      feedbackStatus.textContent = "Thanks — we've got your message and will get back to you by email.";
+      feedbackStatus.className = 'feedback-status visible ok';
+      feedbackForm.reset();
+      feedbackFileError.classList.remove('visible');
+    } catch (err) {
+      feedbackStatus.textContent = err.message || 'Something went wrong. Please try again.';
+      feedbackStatus.className = 'feedback-status visible error';
+    } finally {
+      feedbackSubmitBtn.disabled = false;
+      feedbackSubmitBtn.textContent = 'Send';
+    }
+  });
 </script>
 
 </body>
