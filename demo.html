@@ -749,7 +749,12 @@
       // ad-supported interstitial instead of the actual player, which is
       // what forced a second click to really start playback. A local
       // <video> (see updateDemoInfo()) can't hit that fallback at all.
-      videoSrc: 'assets/rcs-demo-video.mp4',
+      // Cache-busting query string (bump on every file replacement) —
+      // GitHub Pages/Fastly cache this 10 minutes (max-age=600) and browsers
+      // cache it far longer client-side, so overwriting the file in place
+      // silently served stale (often still-noisy) audio/video to anyone who'd
+      // loaded the page recently, with no way to tell from the page itself.
+      videoSrc: 'assets/rcs-demo-video.mp4?v=7faf490003',
       videoCaption: 'See the RCS demo in action — rich cards, suggestion chips, and live voice escalation to a real phone call.',
       // Poster for the native <video> element above — a screenshot of
       // this demo's own conversation rather than a generic thumbnail.
