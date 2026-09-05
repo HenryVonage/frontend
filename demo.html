@@ -107,6 +107,11 @@
     width: 100%;
     height: 100%;
     border: 0;
+    /* Sits UNDER the poster/play button below (z-index) — otherwise this
+       still-present-but-empty iframe, being later in the DOM, paints on
+       top of them and silently swallows every click, which is exactly
+       what made the play button unclickable. */
+    z-index: 1;
   }
   /* Click-to-play poster (see updateDemoInfo()) — shown instead of the
      Drive iframe until tapped, so a demo can show a picture of its own
@@ -122,6 +127,7 @@
     object-fit: cover;
     cursor: pointer;
     display: none;
+    z-index: 2;
   }
   .video-poster.visible { display: block; }
   .video-play-btn {
@@ -138,6 +144,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    z-index: 3;
     color: #fff;
     padding: 0;
     transition: background 0.15s ease, transform 0.15s ease;
