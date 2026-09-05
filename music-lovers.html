@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connect Spotify — Vonage AI Demos</title>
+<style>
+  /* Matches the rest of the site's design system (see index.html /
+     demo.html): system-font stack, navy #1A3D7C header/primary,
+     off-white #F4F6FB ground, white rounded cards, the "demo-info"
+     description panel, and the phone-number + consent pattern used by
+     the RCS tester-registration row. */
+  :root{
+    --navy:#1A3D7C;
+    --navy-deep:#10254D;
+    --ink:#1F2430;
+    --muted:#6B7280;
+    --page-bg:#F4F6FB;
+    --surface:#FFFFFF;
+    --surface-soft:#FBFCFE;
+    --border:#D7DCE6;
+    --badge-bg:#EEF2FB;
+    --panel-bg:#F6F8FD;
+    --panel-border:#E2E8F7;
+    --whatsapp-bg:#DCFCE7; --whatsapp-text:#15803D;
+    --spotify:#1DB954; --spotify-ink:#04170B;
+    --soon-bg:#B45309; --soon-text:#7C4A03;
+    --shadow: 0 1px 3px rgba(16,37,77,.08), 0 8px 24px rgba(16,37,77,.06);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--page-bg);
+    color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  code{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+
+  nav{
+    background:var(--navy);
+    padding:14px 24px;
+    display:flex;
+    align-items:center;
+    gap:20px;
+    flex-wrap:wrap;
+  }
+  nav a{ color:#DBE4FF; text-decoration:none; font-size:14px; font-weight:500; }
+  nav a.active, nav a:hover{ color:#fff; text-decoration:underline; }
+  nav .brand{ color:#fff; font-weight:700; margin-right:auto; font-size:16px; }
+
+  main{ max-width:880px; margin:0 auto; padding:40px 20px 80px; }
+
+  .eyebrow-row{ display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .badge{
+    display:inline-block; background:var(--badge-bg); color:var(--navy);
+    font-size:11px; font-weight:700; letter-spacing:.44px; text-transform:uppercase;
+    padding:4px 10px; border-radius:999px;
+  }
+  .badge.soon{ background:var(--soon-bg); color:#fff; }
+  .badge.channel-tag.whatsapp{ background:var(--whatsapp-bg); color:var(--whatsapp-text); font-size:10px; letter-spacing:.4px; padding:3px 8px; }
+
+  h1{ font-size:30px; font-weight:700; line-height:1.22; margin:0 0 10px; }
+  main > p.lede{ margin:0; font-size:15.5px; line-height:1.6; color:var(--muted); max-width:62ch; }
+  main > p.lede code{ background:var(--badge-bg); color:var(--navy); padding:.08em .4em; border-radius:5px; font-size:.92em; }
+
+  .hero-photo{
+    position:relative; margin-top:26px; border-radius:14px; overflow:hidden;
+    box-shadow:var(--shadow); height:240px;
+  }
+  .hero-photo img{ width:100%; height:100%; object-fit:cover; object-position:50% 30%; display:block; }
+  .hero-photo .scrim{ position:absolute; inset:0; background:linear-gradient(180deg, rgba(16,20,35,0) 32%, rgba(12,15,26,.82) 100%); }
+  .hero-photo .caption{ position:absolute; left:24px; right:24px; bottom:18px; color:#fff; }
+  .hero-photo .caption .kicker{ font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:#C9D6FF; margin-bottom:4px; }
+  .hero-photo .caption h2{ margin:0 0 3px; font-size:22px; font-weight:700; }
+  .hero-photo .caption p{ margin:0; font-size:13px; color:#E4E8F5; }
+
+  .card{ background:var(--surface); border-radius:14px; box-shadow:var(--shadow); padding:24px; margin-top:20px; }
+  .card > h3.title{ margin:0 0 16px; font-size:19px; font-weight:700; color:var(--navy-deep); }
+
+  label.field-label{ display:block; font-size:13px; font-weight:600; color:var(--navy-deep); margin-bottom:6px; }
+  input.field{
+    width:100%; background:var(--surface-soft); border:1px solid var(--border);
+    border-radius:8px; padding:12px 14px; font-size:15px; color:var(--ink);
+    font-family:inherit;
+  }
+  input.field::placeholder{ color:#9CA3AF; }
+  .field-group{ margin-bottom:18px; max-width:420px; }
+
+  /* demo-info description panel, matching .demo-info on the rest of the site */
+  .demo-info{
+    background:var(--panel-bg); border:1px solid var(--panel-border); border-radius:10px;
+    padding:16px 18px; margin:4px 0 22px;
+  }
+  .demo-info p.desc{ margin:8px 0 10px; font-size:13.5px; line-height:1.55; color:var(--ink); }
+  .demo-info ul{ margin:0 0 10px; padding:0 0 0 18px; }
+  .demo-info li{ font-size:13px; line-height:1.7; color:var(--ink); }
+  .demo-info p.stack-note{
+    margin:0; padding:10px 0 0; border-top:1px dashed var(--border);
+    font-size:12px; color:var(--muted);
+  }
+
+  /* tester-row / tester-confirm pattern, matching the RCS phone-registration flow */
+  .spotify-block{ position:relative; }
+  .spotify-block.disabled{ opacity:.6; }
+  .collect-note{ font-size:12.5px; color:var(--muted); line-height:1.5; margin:0 0 10px; max-width:460px; }
+  .tester-row{ display:flex; gap:8px; max-width:460px; }
+  .tester-row input.field{ flex:1 1 0%; }
+  .btn{
+    display:flex; align-items:center; justify-content:center; gap:8px; flex:0 0 auto;
+    border-radius:8px; padding:12px 20px; font-size:14px; font-weight:700;
+    border:1px solid transparent; cursor:pointer; text-decoration:none; white-space:nowrap;
+  }
+  .btn-spotify{ background:var(--spotify); color:var(--spotify-ink); box-shadow:0 8px 18px -8px rgba(29,185,84,.55); }
+  .btn-spotify[disabled], .btn-spotify.disabled{ cursor:not-allowed; pointer-events:none; box-shadow:none; }
+  .btn-secondary{ background:var(--surface); border:1px solid var(--border); color:var(--navy); font-weight:600; }
+
+  .tester-confirm{ display:flex; align-items:flex-start; gap:10px; margin:14px 0 0; padding:12px 0 0; border-top:1px dashed var(--border); max-width:460px; }
+  .tester-confirm input[type="checkbox"]{ margin-top:2px; flex:none; }
+  .tester-confirm label{ font-size:12.5px; line-height:1.55; color:var(--muted); }
+
+  .or-row{ display:flex; align-items:center; gap:10px; color:var(--muted); font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; margin:18px 0 12px; max-width:460px; }
+  .or-row::before, .or-row::after{ content:""; flex:1; height:1px; background:var(--border); }
+
+  .section-label{ font-size:11px; font-weight:700; letter-spacing:.44px; text-transform:uppercase; color:var(--muted); margin:36px 0 14px; }
+  .steps{ display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; }
+  .step{ background:var(--surface); border-radius:14px; box-shadow:var(--shadow); padding:20px; }
+  .step .num{ display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; background:var(--navy); color:#fff; font-size:12px; font-weight:700; border-radius:50%; margin-bottom:12px; }
+  .step h4{ margin:0 0 6px; font-size:14.5px; font-weight:700; color:var(--ink); }
+  .step p{ margin:0 0 10px; font-size:13px; line-height:1.55; color:var(--muted); }
+  .step .tpl{ display:inline-block; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:10.5px; background:var(--badge-bg); color:var(--navy); padding:3px 8px; border-radius:6px; }
+
+  .genre-block{ margin-top:22px; background:var(--surface); border-radius:14px; box-shadow:var(--shadow); padding:20px 24px; }
+  .genre-block p{ margin:0 0 12px; font-size:13.5px; color:var(--muted); line-height:1.55; }
+  .genre-block p code{ background:var(--badge-bg); color:var(--navy); padding:.08em .4em; border-radius:5px; font-size:.92em; }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ font-size:11.5px; font-weight:700; color:var(--navy); background:var(--badge-bg); padding:5px 11px; border-radius:999px; }
+
+  footer.note{ margin-top:28px; font-size:12px; color:#98A2B3; text-align:right; }
+
+  @media (max-width:640px){
+    .steps{ grid-template-columns:1fr; }
+    nav{ flex-wrap:wrap; gap:14px; }
+    .hero-photo{ height:200px; }
+    .tester-row{ flex-direction:column; align-items:stretch; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <span class="brand">Vonage AI Demos</span>
+  <a href="index.html">Home</a>
+  <a href="demo.html">Try a Demo</a>
+  <a href="logs.html">Logs</a>
+  <a href="architecture.html">How it works</a>
+</nav>
+
+<main>
+  <div class="eyebrow-row">
+    <span class="badge">Music Lovers · Connect Step</span>
+  </div>
+
+  <h1>Connect your Spotify</h1>
+  <p class="lede">The screen a listener lands on after tapping their personalised link from WhatsApp — before we know their genre, and before <code>henry_musicselection</code> goes out.</p>
+
+  <div class="hero-photo">
+    <img src="assets/music-lovers-hero.jpg" alt="A crowd dancing in front of a DJ booth">
+    <div class="scrim"></div>
+    <div class="caption">
+      <div class="kicker">Vonage AI Demos</div>
+      <h2>Music Lovers</h2>
+      <p>Soundtrack-sharing over WhatsApp</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="title">Play matchmaker with your playlists</h3>
+
+    <div class="demo-info">
+      <span class="badge channel-tag whatsapp">WhatsApp</span>
+      <p class="desc">This demo matches you to a song over WhatsApp — connect Spotify for an instant genre read, or pick from six genres and get a hand-picked track back in the same chat.</p>
+      <ul>
+        <li>Personalised song pick from Henry's own Spotify playlists</li>
+        <li>Official YouTube clip sent alongside the track</li>
+        <li>Optional Spotify playlist read access for instant genre matching</li>
+        <li>Feedback flow to tell us what you thought</li>
+      </ul>
+      <p class="stack-note">Built on Vonage's Messages API for WhatsApp, with Spotify's Web API powering genre matching.</p>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="firstName">Your first name</label>
+      <input class="field" id="firstName" placeholder="e.g. Henry">
+    </div>
+
+    <div class="spotify-block disabled">
+      <div class="eyebrow-row" style="margin-bottom:8px;">
+        <label class="field-label" for="waNumber" style="margin-bottom:0;">Your WhatsApp number</label>
+        <span class="badge soon">Coming soon</span>
+      </div>
+      <p class="collect-note">We'll use this to send your matched track back to the same WhatsApp chat — and nothing else.</p>
+      <div class="tester-row">
+        <input class="field" type="tel" id="waNumber" placeholder="e.g. 07441 443052" autocomplete="tel" disabled>
+        <button class="btn btn-spotify disabled" disabled aria-disabled="true" title="Spotify connect is launching soon — skip to WhatsApp for now">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 10.5c5-1.4 10.2-1 14.5 1.3M5 14.3c4.2-1.1 8.6-.8 12.2 1.1M6 17.8c3.4-.8 6.9-.6 9.8.9" stroke="#04170B" stroke-width="2.1" stroke-linecap="round"/></svg>
+          Share your Spotify playlists
+        </button>
+      </div>
+
+      <div class="tester-confirm">
+        <input type="checkbox" id="spotifyConsent" disabled>
+        <label for="spotifyConsent">I agree Vonage can read my Spotify playlists to match a genre. Read-only access — nothing is posted, changed, or kept, and I can revoke it anytime in Spotify settings.</label>
+      </div>
+    </div>
+
+    <div class="or-row">or</div>
+    <a href="#" id="skipLink" class="btn btn-secondary">Skip — pick a genre on WhatsApp instead</a>
+  </div>
+
+  <div class="section-label">How this step fits in</div>
+  <div class="steps">
+    <div class="step">
+      <span class="num">1</span>
+      <h4>Tap your link</h4>
+      <p>Each WhatsApp conversation gets a one-time personalised link, so this screen already knows who's connecting.</p>
+      <span class="tpl">no login required</span>
+    </div>
+    <div class="step">
+      <span class="num">2</span>
+      <h4>Connect or skip</h4>
+      <p>Share playlist access for an instant match, or skip straight to picking a genre back in the chat.</p>
+      <span class="tpl">henry_musicselection</span>
+    </div>
+    <div class="step">
+      <span class="num">3</span>
+      <h4>Track lands on WhatsApp</h4>
+      <p>One song, matched to your genre, plus its official clip — sent straight back to the same conversation.</p>
+      <span class="tpl">henry_musicsharing2</span>
+    </div>
+  </div>
+
+  <div class="genre-block">
+    <p>Skipping routes to <code>henry_musicselection</code> on WhatsApp, with six genres to choose from:</p>
+    <div class="chips">
+      <span class="chip">Pop</span>
+      <span class="chip">Hip-Hop/Rap</span>
+      <span class="chip">Indie/Alt</span>
+      <span class="chip">Electronic</span>
+      <span class="chip">R&amp;B</span>
+      <span class="chip">Rock</span>
+    </div>
+  </div>
+
+  <footer class="note">Spotify auto-connect is launching soon — for now, every listener goes via WhatsApp genre selection.</footer>
+</main>
+
+<script>
+  // Same WABA number used by the rest of the portfolio (see demo.html) —
+  // no separate number to register. The backend tells demos apart by
+  // greeting text (see websocketcalls/lib/demoRouter.js), so this greeting
+  // needs a matching "music lovers" keyword added there before this link
+  // actually routes to the right flow end-to-end.
+  const WABA_NUMBER = '447520691413';
+
+  // Apostrophe-free on purpose, matching demo.html's greetingFor() — some
+  // deep-link/QR consumers mishandle the encoded apostrophe.
+  function greetingText() {
+    const name = document.getElementById('firstName').value.trim();
+    if (name) return `Hi, Im ${name} — Welcome to Music Lovers demo!`;
+    return 'Welcome to Music Lovers demo!';
+  }
+
+  function updateSkipLink() {
+    const text = greetingText();
+    document.getElementById('skipLink').href = `https://wa.me/${WABA_NUMBER}?text=${encodeURIComponent(text)}`;
+  }
+
+  document.getElementById('firstName').addEventListener('input', updateSkipLink);
+  updateSkipLink();
+</script>
+
+</body>
+</html>
