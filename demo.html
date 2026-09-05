@@ -108,6 +108,46 @@
     height: 100%;
     border: 0;
   }
+  /* Click-to-play poster (see updateDemoInfo()) — shown instead of the
+     Drive iframe until tapped, so a demo can show a picture of its own
+     conversation instead of Drive's generic thumbnail, and the embed
+     isn't fetched at all for visitors who never click play. Hidden by
+     default; only demos with a posterImage use this (others still load
+     the iframe immediately, unchanged). */
+  .video-poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+    display: none;
+  }
+  .video-poster.visible { display: block; }
+  .video-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(16, 37, 77, 0.78);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    padding: 0;
+    transition: background 0.15s ease, transform 0.15s ease;
+  }
+  .video-play-btn.visible { display: flex; }
+  .video-play-btn:hover {
+    background: rgba(16, 37, 77, 0.95);
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+  .video-play-btn svg { margin-left: 3px; }
   @media (max-width: 880px) {
     .layout-row { flex-direction: column; }
     .layout-row .card { max-width: none; width: 100%; }
@@ -536,6 +576,10 @@
       <div class="video-panel-inner">
         <p class="video-caption" id="videoCaptionText">See this demo in action.</p>
         <div class="video-embed">
+          <img id="videoPoster" class="video-poster" alt="" />
+          <button id="videoPlayBtn" class="video-play-btn" type="button" aria-label="Play video">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          </button>
           <iframe id="videoFrame" src="" allow="autoplay" allowfullscreen loading="lazy"></iframe>
         </div>
       </div>
@@ -679,6 +723,10 @@
       ],
       recordingId: '1oZKkH88qrInP1-2CJhqN_J-jD-MLW3ov',
       videoCaption: 'See the RCS demo in action — rich cards, suggestion chips, and live voice escalation to a real phone call.',
+      // Shown as a click-to-play poster instead of loading the Drive
+      // iframe immediately (see updateDemoInfo()) — a screenshot of this
+      // demo's own conversation rather than Drive's generic thumbnail.
+      posterImage: 'assets/rcs-video-poster.jpg',
     },
     {
       id: 'henry-ticketing-rcs',
@@ -951,13 +999,27 @@
     // stops playback instead of leaving it running off-screen.
     const videoPanel = document.getElementById('videoPanel');
     const videoFrame = document.getElementById('videoFrame');
+    const videoPoster = document.getElementById('videoPoster');
+    const videoPlayBtn = document.getElementById('videoPlayBtn');
     const showVideo = !!demo.recordingId;
     videoPanel.classList.toggle('visible', showVideo);
+    const embedUrl = showVideo ? `https://drive.google.com/file/d/${demo.recordingId}/preview` : '';
     if (showVideo) {
-      videoFrame.src = `https://drive.google.com/file/d/${demo.recordingId}/preview`;
       document.getElementById('videoCaptionText').textContent = demo.videoCaption || 'See this demo in action.';
-    } else {
+    }
+    if (showVideo && demo.posterImage) {
+      // Hold off loading the iframe until the poster is actually
+      // clicked — see playVideoFromPoster() below.
       videoFrame.src = '';
+      videoFrame.dataset.pendingSrc = embedUrl;
+      videoPoster.src = demo.posterImage;
+      videoPoster.classList.add('visible');
+      videoPlayBtn.classList.add('visible');
+    } else {
+      videoFrame.dataset.pendingSrc = '';
+      videoPoster.classList.remove('visible');
+      videoPlayBtn.classList.remove('visible');
+      videoFrame.src = embedUrl;
     }
 
     // The tester-registration step only applies to the RCS demo — its
@@ -1252,6 +1314,19 @@
   // refreshAll() directly instead.
   document.getElementById('firstName').addEventListener('input', refreshDemo);
   refreshAll();
+
+  // Poster → iframe swap for demos with a posterImage (see
+  // updateDemoInfo()) — loads the Drive embed only once the visitor
+  // actually clicks play.
+  function playVideoFromPoster() {
+    const frame = document.getElementById('videoFrame');
+    if (!frame.dataset.pendingSrc) return;
+    frame.src = frame.dataset.pendingSrc;
+    document.getElementById('videoPoster').classList.remove('visible');
+    document.getElementById('videoPlayBtn').classList.remove('visible');
+  }
+  document.getElementById('videoPoster').addEventListener('click', playVideoFromPoster);
+  document.getElementById('videoPlayBtn').addEventListener('click', playVideoFromPoster);
 
   // --- Feedback form: comment/question + optional photo/video, emailed to
   // Henry via the backend's /api/feedback (see server.js +
