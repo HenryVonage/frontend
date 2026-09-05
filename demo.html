@@ -155,6 +155,20 @@
     transform: translate(-50%, -50%) scale(1.06);
   }
   .video-play-btn svg { margin-left: 3px; }
+  /* Self-hosted <video> for demos with a videoSrc (currently just Real
+     Estate RCS — see updateDemoInfo()). object-fit:contain rather than
+     cover: the recording's own aspect ratio is taller/narrower than this
+     panel's 9:16 box, and contain letterboxes onto the panel's existing
+     black background instead of cropping the phone UI. */
+  .video-embed video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #000;
+    display: none;
+  }
   @media (max-width: 880px) {
     .layout-row { flex-direction: column; }
     .layout-row .card { max-width: none; width: 100%; }
@@ -588,6 +602,7 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
           </button>
           <iframe id="videoFrame" src="" allow="autoplay" allowfullscreen loading="lazy"></iframe>
+          <video id="videoLocal" playsinline preload="metadata" controls></video>
         </div>
       </div>
     </div>
@@ -728,11 +743,16 @@
         'PSTN Voice escalation — a real phone call to the same AI agent',
         'Post-call recap & booking confirmation sent back over RCS',
       ],
-      recordingId: '1oZKkH88qrInP1-2CJhqN_J-jD-MLW3ov',
+      // Self-hosted, unlike the recordingId (Drive) demos elsewhere in
+      // this array — this file is large enough (73MB uncompressed) that
+      // Google Drive's /preview embed fell back to a degraded,
+      // ad-supported interstitial instead of the actual player, which is
+      // what forced a second click to really start playback. A local
+      // <video> (see updateDemoInfo()) can't hit that fallback at all.
+      videoSrc: 'assets/rcs-demo-video.mp4',
       videoCaption: 'See the RCS demo in action — rich cards, suggestion chips, and live voice escalation to a real phone call.',
-      // Shown as a click-to-play poster instead of loading the Drive
-      // iframe immediately (see updateDemoInfo()) — a screenshot of this
-      // demo's own conversation rather than Drive's generic thumbnail.
+      // Poster for the native <video> element above — a screenshot of
+      // this demo's own conversation rather than a generic thumbnail.
       posterImage: 'assets/rcs-video-poster.jpg',
     },
     {
@@ -994,39 +1014,58 @@
     document.getElementById('archVoiceLabel').textContent = arch.voiceLabel;
 
     // The recorded walkthrough video panel shows for any demo that
-    // declares a recordingId (currently Real Estate WhatsApp, Real Estate
-    // RCS, and Ticketing WhatsApp) — widens the layout to fit it only
-    // while visible. It's a Google Drive /preview embed rather than a direct
-    // <video> src: Drive's direct-download link only serves the raw file
-    // to the file's own owner without hitting the "can't scan for
-    // viruses" interstitial, which would break playback for real
-    // visitors, whereas /preview is Drive's own supported embed and
-    // works for anyone with view access. The iframe src is cleared
-    // whenever hidden so switching to a demo with no recording actually
-    // stops playback instead of leaving it running off-screen.
+    // declares a recordingId (Real Estate WhatsApp, Ticketing WhatsApp) or
+    // a videoSrc (Real Estate RCS) — widens the layout to fit it only
+    // while visible. recordingId demos embed Google Drive's /preview
+    // (Drive's own supported embed, works for anyone with view access,
+    // unlike the direct-download link which hits a "can't scan for
+    // viruses" interstitial for non-owners). videoSrc demos instead use a
+    // plain self-hosted <video> — added after Real Estate RCS's recording
+    // turned out large enough that Drive's /preview fell back to a
+    // degraded, ad-supported interstitial instead of the real player,
+    // forcing a second click to actually start playback; a local file
+    // can't hit that fallback. Both the iframe src and the video src are
+    // cleared whenever hidden so switching to a demo with no recording
+    // actually stops playback instead of leaving it running off-screen.
     const videoPanel = document.getElementById('videoPanel');
     const videoFrame = document.getElementById('videoFrame');
     const videoPoster = document.getElementById('videoPoster');
     const videoPlayBtn = document.getElementById('videoPlayBtn');
-    const showVideo = !!demo.recordingId;
+    const videoLocal = document.getElementById('videoLocal');
+    const showVideo = !!demo.recordingId || !!demo.videoSrc;
     videoPanel.classList.toggle('visible', showVideo);
-    const embedUrl = showVideo ? `https://drive.google.com/file/d/${demo.recordingId}/preview` : '';
+    const embedUrl = (showVideo && demo.recordingId) ? `https://drive.google.com/file/d/${demo.recordingId}/preview` : '';
     if (showVideo) {
       document.getElementById('videoCaptionText').textContent = demo.videoCaption || 'See this demo in action.';
     }
-    if (showVideo && demo.posterImage) {
-      // Hold off loading the iframe until the poster is actually
-      // clicked — see playVideoFromPoster() below.
+    if (showVideo && demo.videoSrc) {
       videoFrame.src = '';
-      videoFrame.dataset.pendingSrc = embedUrl;
-      videoPoster.src = demo.posterImage;
-      videoPoster.classList.add('visible');
-      videoPlayBtn.classList.add('visible');
-    } else {
       videoFrame.dataset.pendingSrc = '';
+      videoFrame.style.display = 'none';
       videoPoster.classList.remove('visible');
       videoPlayBtn.classList.remove('visible');
-      videoFrame.src = embedUrl;
+      videoLocal.poster = demo.posterImage || '';
+      videoLocal.src = demo.videoSrc;
+      videoLocal.style.display = 'block';
+    } else {
+      videoLocal.style.display = 'none';
+      videoLocal.removeAttribute('src');
+      videoLocal.load();
+      videoFrame.style.display = '';
+      if (showVideo && demo.posterImage) {
+        // Hold off loading the iframe until the poster is actually
+        // clicked — see playVideoFromPoster() below.
+        videoFrame.src = '';
+        videoFrame.dataset.pendingSrc = embedUrl;
+        videoPoster.src = demo.posterImage;
+        videoPoster.classList.add('visible');
+        videoPlayBtn.classList.add('visible');
+      } else {
+        videoFrame.dataset.pendingSrc = '';
+        videoPoster.classList.remove('visible');
+        videoPlayBtn.classList.remove('visible');
+        videoFrame.src = embedUrl;
+      }
     }
 
     // The tester-registration step only applies to the RCS demo — its
