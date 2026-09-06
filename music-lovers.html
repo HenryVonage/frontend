@@ -104,7 +104,12 @@
   /* tester-row / tester-confirm pattern, matching the RCS phone-registration flow */
   .spotify-block{ position:relative; }
   .spotify-block.disabled{ opacity:.6; }
+  .badge.beta{ background:var(--spotify); color:var(--spotify-ink); }
   .collect-note{ font-size:12.5px; color:var(--muted); line-height:1.5; margin:0 0 10px; max-width:460px; }
+  .connect-status{ font-size:12.5px; line-height:1.5; margin:10px 0 0; max-width:460px; display:none; }
+  .connect-status.show{ display:block; }
+  .connect-status.error{ color:#B42318; }
+  .connect-status.success{ color:#15803D; }
   .tester-row{ display:flex; gap:8px; max-width:460px; }
   .tester-row input.field{ flex:1 1 0%; }
   .btn{
@@ -195,24 +200,26 @@
       <input class="field" id="firstName" placeholder="e.g. Henry">
     </div>
 
-    <div class="spotify-block disabled">
+    <div class="spotify-block">
       <div class="eyebrow-row" style="margin-bottom:8px;">
         <label class="field-label" for="waNumber" style="margin-bottom:0;">Your WhatsApp number</label>
-        <span class="badge soon">Coming soon</span>
+        <span class="badge beta">Beta</span>
       </div>
       <p class="collect-note">We'll use this to send your matched track back to the same WhatsApp chat — and nothing else.</p>
       <div class="tester-row">
-        <input class="field" type="tel" id="waNumber" placeholder="e.g. 07441 443052" autocomplete="tel" disabled>
-        <button class="btn btn-spotify disabled" disabled aria-disabled="true" title="Spotify connect is launching soon — skip to WhatsApp for now">
+        <input class="field" type="tel" id="waNumber" placeholder="e.g. 07441 443052" autocomplete="tel">
+        <button class="btn btn-spotify" id="spotifyConnectBtn" type="button">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 10.5c5-1.4 10.2-1 14.5 1.3M5 14.3c4.2-1.1 8.6-.8 12.2 1.1M6 17.8c3.4-.8 6.9-.6 9.8.9" stroke="#04170B" stroke-width="2.1" stroke-linecap="round"/></svg>
           Share your Spotify playlists
         </button>
       </div>
 
       <div class="tester-confirm">
-        <input type="checkbox" id="spotifyConsent" disabled>
+        <input type="checkbox" id="spotifyConsent">
         <label for="spotifyConsent">I agree Vonage can read my Spotify playlists to match a genre. Read-only access — nothing is posted, changed, or kept, and I can revoke it anytime in Spotify settings.</label>
       </div>
+
+      <p class="connect-status" id="connectStatus"></p>
     </div>
 
     <div class="or-row">or</div>
@@ -253,10 +260,15 @@
     </div>
   </div>
 
-  <footer class="note">Spotify auto-connect is launching soon — for now, every listener goes via WhatsApp genre selection.</footer>
+  <footer class="note">Spotify connect reads only your top artists (read-only, revoke anytime in Spotify settings) — or skip it and pick a genre on WhatsApp instead.</footer>
 </main>
 
 <script>
+  // Same backend behind every demo in the portfolio (see demo.html's own
+  // API_BASE) — Spotify connect adds two routes to it (server.js's
+  // /api/spotify-auth-start + /api/spotify-callback), no new service.
+  const API_BASE = 'https://websocketcalls.onrender.com';
+
   // Same WABA number used by the rest of the portfolio (see demo.html) —
   // no separate number to register. The backend tells demos apart by
   // greeting text (see websocketcalls/lib/demoRouter.js), so this greeting
@@ -279,6 +291,56 @@
 
   document.getElementById('firstName').addEventListener('input', updateSkipLink);
   updateSkipLink();
+
+  // --- Spotify connect (Authorization Code flow — see websocketcalls'
+  // lib/spotifyOAuth.js). This page never talks to Spotify directly: it
+  // hands the listener's name + phone to the backend as a plain page
+  // navigation (not a fetch, so no CORS involved), which redirects them to
+  // Spotify's consent screen, then Spotify calls the backend back, which
+  // redirects here again with a ?spotify= status. ---
+  const statusEl = document.getElementById('connectStatus');
+
+  function showStatus(text, kind) {
+    statusEl.textContent = text;
+    statusEl.className = `connect-status show ${kind}`;
+  }
+
+  document.getElementById('spotifyConnectBtn').addEventListener('click', () => {
+    const name = document.getElementById('firstName').value.trim();
+    const waNumber = document.getElementById('waNumber').value.trim();
+    const consent = document.getElementById('spotifyConsent').checked;
+
+    if (!name) {
+      showStatus('Enter your first name above first.', 'error');
+      return;
+    }
+    if (!waNumber) {
+      showStatus('Enter your WhatsApp number to continue.', 'error');
+      return;
+    }
+    if (!consent) {
+      showStatus('Please tick the consent checkbox to continue.', 'error');
+      return;
+    }
+
+    showStatus('Redirecting you to Spotify…', 'success');
+    const params = new URLSearchParams({ phone: waNumber, name });
+    window.location.href = `${API_BASE}/api/spotify-auth-start?${params.toString()}`;
+  });
+
+  // Landed back here from /api/spotify-callback — show what happened.
+  // (The backend already sent the matched track over WhatsApp by the time
+  // this fires, on a "connected" result — this is just the on-page echo.)
+  const spotifyResult = new URLSearchParams(window.location.search).get('spotify');
+  if (spotifyResult === 'connected') {
+    showStatus('Connected! Check WhatsApp — your matched track is on its way. 🎧', 'success');
+  } else if (spotifyResult === 'denied') {
+    showStatus("No worries — you didn't grant access, so nothing was read. Pick a genre on WhatsApp instead below.", 'error');
+  } else if (spotifyResult === 'expired') {
+    showStatus('That Spotify connect link expired — please tap "Share your Spotify playlists" again.', 'error');
+  } else if (spotifyResult === 'error') {
+    showStatus("Something went wrong connecting Spotify — pick a genre on WhatsApp instead for now.", 'error');
+  }
 </script>
 
 </body>
