@@ -156,7 +156,7 @@
   }
   .video-play-btn svg { margin-left: 3px; }
   /* Self-hosted <video> for demos with a videoSrc (Real Estate RCS,
-     Ticketing WhatsApp — see updateDemoInfo()). object-fit:contain rather than
+     Ticketing RCS, Ticketing WhatsApp — see updateDemoInfo()). object-fit:contain rather than
      cover: the recording's own aspect ratio is taller/narrower than this
      panel's 9:16 box, and contain letterboxes onto the panel's existing
      black background instead of cropping the phone UI. */
@@ -780,6 +780,14 @@
         'Rich cards for e-tickets, event schedule & shuttle info',
         'Contact us — escalates to a real PSTN phone call, same as the Real Estate demo',
       ],
+      // Self-hosted, like the other two demo videos — this recording had
+      // no audio to begin with (silent screen capture), so the track was
+      // stripped entirely rather than left in.
+      videoSrc: 'assets/ticketing-rcs-demo-video.mp4?v=440534782b',
+      videoCaption: 'See the Ticketing RCS demo in action — rich cards, in-seat ordering, and event-day info.',
+      // Click-to-play poster — a screenshot of this demo's own "you won a
+      // prize" result rather than a generic frame from the recording.
+      posterImage: 'assets/ticketing-rcs-video-poster.jpg',
     },
     {
       id: 'henry-ticketing-whatsapp',
@@ -1027,7 +1035,7 @@
 
     // The recorded walkthrough video panel shows for any demo that
     // declares a recordingId (Real Estate WhatsApp) or a videoSrc (Real
-    // Estate RCS, Ticketing WhatsApp) — widens the layout to fit it only
+    // Estate RCS, Ticketing RCS, Ticketing WhatsApp) — widens the layout to fit it only
     // while visible. recordingId demos embed Google Drive's /preview
     // (Drive's own supported embed, works for anyone with view access,
     // unlike the direct-download link which hits a "can't scan for
