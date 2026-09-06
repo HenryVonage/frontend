@@ -207,7 +207,8 @@
 
     <div class="field-group">
       <label class="field-label" for="waNumber">Your WhatsApp number</label>
-      <input class="field" type="tel" id="waNumber" placeholder="e.g. 07441 443052" autocomplete="tel">
+      <input class="field" type="tel" id="waNumber" placeholder="e.g. +44 7441 443052" autocomplete="tel">
+      <p class="collect-note" style="margin-top:6px; margin-bottom:0;">Use international format, including the country code (e.g. +44 7441 443052).</p>
     </div>
 
     <!-- Primary path: works instantly for anyone, no approval needed. -->
@@ -329,6 +330,16 @@
   // redirects here again with a ?spotify= status. ---
   const statusEl = document.getElementById('connectStatus');
   const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Loose E.164 check (leading "+", country code, 7-15 digits total) —
+  // just catches the common mistake of typing a local-format number (e.g.
+  // "07441 443052") without a country code, which the backend can't
+  // reliably guess for every visitor. Spaces/dashes are stripped before
+  // testing since the placeholder models a spaced-out international
+  // number and people naturally type it that way.
+  const INTL_PHONE_RE = /^\+[1-9]\d{6,14}$/;
+  function isValidInternationalPhone(value) {
+    return INTL_PHONE_RE.test(value.replace(/[\s-]/g, ''));
+  }
 
   function showStatus(text, kind) {
     statusEl.textContent = text;
@@ -347,6 +358,10 @@
     }
     if (!waNumber) {
       showStatus('Enter your WhatsApp number to continue.', 'error');
+      return;
+    }
+    if (!isValidInternationalPhone(waNumber)) {
+      showStatus('Enter your number in international format, including the country code (e.g. +44 7441 443052).', 'error');
       return;
     }
     // Email is optional — only validated if the visitor actually typed
