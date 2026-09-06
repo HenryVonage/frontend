@@ -155,8 +155,8 @@
     transform: translate(-50%, -50%) scale(1.06);
   }
   .video-play-btn svg { margin-left: 3px; }
-  /* Self-hosted <video> for demos with a videoSrc (currently just Real
-     Estate RCS — see updateDemoInfo()). object-fit:contain rather than
+  /* Self-hosted <video> for demos with a videoSrc (Real Estate RCS,
+     Ticketing WhatsApp — see updateDemoInfo()). object-fit:contain rather than
      cover: the recording's own aspect ratio is taller/narrower than this
      panel's 9:16 box, and contain letterboxes onto the panel's existing
      black background instead of cropping the phone UI. */
@@ -803,7 +803,10 @@
         'WhatsApp Calling — voice call placed inside WhatsApp, answered by a dedicated ticketing AI agent',
         'Win a prize by completing a WhatsApp Flow survey — a real multi-screen native form, not just a text reply',
       ],
-      recordingId: '1WQSE9VLxmyNdmQqe0E9zaz7Ethfuu6-2',
+      // Self-hosted, like the RCS Real Estate video — Drive's /preview
+      // iframe falls back to a degraded ad interstitial for large files
+      // viewed anonymously, requiring an extra click to actually play.
+      videoSrc: 'assets/ticketing-whatsapp-demo-video.mp4?v=42f3387405',
       videoCaption: 'See the Ticketing WhatsApp demo in action — please put the 🔊 sound on to hear the WhatsApp Calling feature 🗣️',
       // Click-to-play poster (see updateDemoInfo()) — a screenshot of this
       // demo's own "you won a prize" WhatsApp Flow result rather than
@@ -1023,8 +1026,8 @@
     document.getElementById('archVoiceLabel').textContent = arch.voiceLabel;
 
     // The recorded walkthrough video panel shows for any demo that
-    // declares a recordingId (Real Estate WhatsApp, Ticketing WhatsApp) or
-    // a videoSrc (Real Estate RCS) — widens the layout to fit it only
+    // declares a recordingId (Real Estate WhatsApp) or a videoSrc (Real
+    // Estate RCS, Ticketing WhatsApp) — widens the layout to fit it only
     // while visible. recordingId demos embed Google Drive's /preview
     // (Drive's own supported embed, works for anyone with view access,
     // unlike the direct-download link which hits a "can't scan for
