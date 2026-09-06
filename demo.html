@@ -75,8 +75,8 @@
      video panel is also showing — there's rarely leftover space to fill
      in that case. */
   .side-column .feedback-card { flex: 1 1 auto; }
-  /* Hidden by default; only shown for demos with a recordingId (see
-     updateDemoInfo() in the script below). */
+  /* Hidden by default; only shown for demos with a recordingId or
+     videoSrc (see updateDemoInfo() in the script below). */
   .video-panel { display: none; }
   .video-panel.visible { display: block; }
   .video-panel-inner {
@@ -727,11 +727,11 @@
         'WhatsApp Calling — voice call placed inside WhatsApp itself',
         'Post-call recap sent back as a WhatsApp document template',
       ],
-      // Google Drive file id for the recorded walkthrough shown in the
-      // right-hand video panel (see updateDemoInfo()) — extracted here
-      // from what was previously a hardcoded <iframe src> so any demo can
-      // have its own recording just by adding this field.
-      recordingId: '1BAm7wKHvhIfWnUy_IO_ijTilF_Vfyyp7',
+      // Self-hosted, like the other three demo videos — this recording
+      // was 96MB, which made Drive's /preview iframe fall back to a
+      // degraded ad interstitial for anonymous viewers, needing an extra
+      // click. Audio stream copied untouched (real WhatsApp Calling audio).
+      videoSrc: 'assets/real-estate-whatsapp-demo-video.mp4?v=ccf5081504',
       videoCaption: 'See the WhatsApp demo in action — please put the 🔊 sound on to hear the WhatsApp Calling feature 🗣️',
       // Click-to-play poster (see updateDemoInfo()) — a screenshot of this
       // demo's own WhatsApp flow rather than Drive's generic thumbnail.
@@ -1044,15 +1044,17 @@
     document.getElementById('archVoiceLabel').textContent = arch.voiceLabel;
 
     // The recorded walkthrough video panel shows for any demo that
-    // declares a recordingId (Real Estate WhatsApp) or a videoSrc (Real
-    // Estate RCS, Ticketing RCS, Ticketing WhatsApp) — widens the layout to fit it only
-    // while visible. recordingId demos embed Google Drive's /preview
+    // declares a recordingId or a videoSrc — widens the layout to fit it
+    // only while visible. recordingId demos embed Google Drive's /preview
     // (Drive's own supported embed, works for anyone with view access,
     // unlike the direct-download link which hits a "can't scan for
-    // viruses" interstitial for non-owners). videoSrc demos instead use a
-    // plain self-hosted <video> — added after Real Estate RCS's recording
-    // turned out large enough that Drive's /preview fell back to a
-    // degraded, ad-supported interstitial instead of the real player,
+    // viruses" interstitial for non-owners) — no demo currently uses this
+    // path, but it's kept for any future recording small enough that
+    // Drive's fallback interstitial isn't a risk. videoSrc demos (all four
+    // current recordings) instead use a plain self-hosted <video> — every
+    // one of them started on recordingId and got moved here after its
+    // Drive recording turned out large enough that /preview fell back to
+    // a degraded, ad-supported interstitial instead of the real player,
     // forcing a second click to actually start playback; a local file
     // can't hit that fallback. Both the iframe src and the video src are
     // cleared whenever hidden so switching to a demo with no recording
