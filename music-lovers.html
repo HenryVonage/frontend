@@ -104,7 +104,12 @@
   /* tester-row / tester-confirm pattern, matching the RCS phone-registration flow */
   .spotify-block{ position:relative; }
   .spotify-block.disabled{ opacity:.6; }
-  .badge.beta{ background:var(--spotify); color:var(--spotify-ink); }
+  .badge.ready{ background:var(--whatsapp-bg); color:var(--whatsapp-text); }
+  .path-label{ font-size:15px; font-weight:700; color:var(--navy-deep); }
+  .path-block{ margin-bottom:22px; }
+  .path-block:last-child{ margin-bottom:0; }
+  .btn-primary{ background:var(--navy); color:#fff; }
+  .btn-primary:hover{ background:var(--navy-deep); }
   .collect-note{ font-size:12.5px; color:var(--muted); line-height:1.5; margin:0 0 10px; max-width:460px; }
   .connect-status{ font-size:12.5px; line-height:1.5; margin:10px 0 0; max-width:460px; display:none; }
   .connect-status.show{ display:block; }
@@ -185,11 +190,11 @@
 
     <div class="demo-info">
       <span class="badge channel-tag whatsapp">WhatsApp</span>
-      <p class="desc">This demo matches you to a song over WhatsApp — connect Spotify for an instant genre read, or pick from six genres and get a hand-picked track back in the same chat.</p>
+      <p class="desc">This demo matches you to a song over WhatsApp — pick from six genres and get a hand-picked track back in the same chat, or connect Spotify for an instant genre read (live preview, approved testers only for now).</p>
       <ul>
         <li>Personalised song pick from Henry's own Spotify playlists</li>
         <li>Official YouTube clip sent alongside the track</li>
-        <li>Optional Spotify playlist read access for instant genre matching</li>
+        <li>Optional Spotify playlist read access for instant genre matching — live preview, limited to approved testers</li>
         <li>Feedback flow to tell us what you thought</li>
       </ul>
       <p class="stack-note">Built on Vonage's Messages API for WhatsApp, with Spotify's Web API powering genre matching.</p>
@@ -200,12 +205,37 @@
       <input class="field" id="firstName" placeholder="e.g. Henry">
     </div>
 
-    <div class="spotify-block">
+    <!-- Primary path: works instantly for anyone, no approval needed. -->
+    <div class="path-block">
       <div class="eyebrow-row" style="margin-bottom:8px;">
-        <label class="field-label" for="waNumber" style="margin-bottom:0;">Your WhatsApp number</label>
-        <span class="badge beta">Beta</span>
+        <span class="badge ready">Ready now</span>
+        <span class="path-label">Pick a genre on WhatsApp</span>
       </div>
-      <p class="collect-note">We'll use this to send your matched track back to the same WhatsApp chat — and nothing else.</p>
+      <p class="collect-note">Works instantly for everyone — six genres, one hand-picked track sent straight back to the same WhatsApp chat.</p>
+      <a href="#" id="skipLink" class="btn btn-primary">Continue on WhatsApp</a>
+    </div>
+
+    <div class="or-row">or</div>
+
+    <!-- Secondary path: Spotify Connect. Live, but gated by Spotify itself
+         while the app is in Development Mode — only accounts Henry has
+         manually approved under the app's User Management tab can
+         complete this. Collecting an email here lets an unknown tester
+         request that approval instead of just hitting a dead end on
+         Spotify's own consent screen. -->
+    <div class="path-block spotify-block">
+      <div class="eyebrow-row" style="margin-bottom:8px;">
+        <span class="badge soon">Limited access</span>
+        <span class="path-label">Connect your Spotify</span>
+      </div>
+      <p class="collect-note">Reads your top artists for an instant genre match — no WhatsApp question needed. This is a live developer preview: Spotify only lets us open it to accounts we've approved by hand. Enter your email below and we'll add you (usually within minutes) — or just use WhatsApp above while you wait.</p>
+
+      <div class="field-group" style="max-width:460px;">
+        <label class="field-label" for="testerEmail">Your email (for Spotify tester access)</label>
+        <input class="field" type="email" id="testerEmail" placeholder="e.g. henry@vonage.com" autocomplete="email">
+      </div>
+
+      <label class="field-label" for="waNumber">Your WhatsApp number</label>
       <div class="tester-row">
         <input class="field" type="tel" id="waNumber" placeholder="e.g. 07441 443052" autocomplete="tel">
         <button class="btn btn-spotify" id="spotifyConnectBtn" type="button">
@@ -221,9 +251,6 @@
 
       <p class="connect-status" id="connectStatus"></p>
     </div>
-
-    <div class="or-row">or</div>
-    <a href="#" id="skipLink" class="btn btn-secondary">Skip — pick a genre on WhatsApp instead</a>
   </div>
 
   <div class="section-label">How this step fits in</div>
@@ -236,8 +263,8 @@
     </div>
     <div class="step">
       <span class="num">2</span>
-      <h4>Connect or skip</h4>
-      <p>Share playlist access for an instant match, or skip straight to picking a genre back in the chat.</p>
+      <h4>Pick a genre, or connect Spotify</h4>
+      <p>Everyone can pick a genre on WhatsApp instantly. Connecting Spotify for an automatic match is a live preview, currently limited to approved testers.</p>
       <span class="tpl">henry_musicselection</span>
     </div>
     <div class="step">
@@ -260,7 +287,7 @@
     </div>
   </div>
 
-  <footer class="note">Spotify connect reads only your top artists (read-only, revoke anytime in Spotify settings) — or skip it and pick a genre on WhatsApp instead.</footer>
+  <footer class="note">WhatsApp genre picking works instantly for everyone. Spotify connect is a live developer preview (read-only, revoke anytime in Spotify settings) — currently limited to approved testers while Spotify's app review is pending.</footer>
 </main>
 
 <script>
@@ -299,6 +326,7 @@
   // Spotify's consent screen, then Spotify calls the backend back, which
   // redirects here again with a ?spotify= status. ---
   const statusEl = document.getElementById('connectStatus');
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   function showStatus(text, kind) {
     statusEl.textContent = text;
@@ -307,11 +335,16 @@
 
   document.getElementById('spotifyConnectBtn').addEventListener('click', () => {
     const name = document.getElementById('firstName').value.trim();
+    const email = document.getElementById('testerEmail').value.trim();
     const waNumber = document.getElementById('waNumber').value.trim();
     const consent = document.getElementById('spotifyConsent').checked;
 
     if (!name) {
       showStatus('Enter your first name above first.', 'error');
+      return;
+    }
+    if (!EMAIL_RE.test(email)) {
+      showStatus('Enter a valid email — we use it to request Spotify tester access for you.', 'error');
       return;
     }
     if (!waNumber) {
@@ -322,6 +355,20 @@
       showStatus('Please tick the consent checkbox to continue.', 'error');
       return;
     }
+
+    // Tells Henry (by email) to add this address under Spotify's User
+    // Management tab if it isn't already approved — see demo-notes.md's
+    // "Spotify Connect" section on why this manual step exists.
+    // `keepalive: true` lets the request finish even though the page
+    // navigates away right after (fire-and-forget on purpose: this
+    // shouldn't block or fail the actual connect attempt below, which
+    // works immediately for anyone already approved).
+    fetch(`${API_BASE}/api/spotify-tester-request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, phone: waNumber }),
+      keepalive: true,
+    }).catch(() => {});
 
     showStatus('Redirecting you to Spotify…', 'success');
     const params = new URLSearchParams({ phone: waNumber, name });
@@ -335,7 +382,7 @@
   if (spotifyResult === 'connected') {
     showStatus('Connected! Check WhatsApp — your matched track is on its way. 🎧', 'success');
   } else if (spotifyResult === 'denied') {
-    showStatus("No worries — you didn't grant access, so nothing was read. Pick a genre on WhatsApp instead below.", 'error');
+    showStatus("No worries — you didn't grant access, so nothing was read. Pick a genre on WhatsApp instead (above).", 'error');
   } else if (spotifyResult === 'expired') {
     showStatus('That Spotify connect link expired — please tap "Share your Spotify playlists" again.', 'error');
   } else if (spotifyResult === 'error') {
