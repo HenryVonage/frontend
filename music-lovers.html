@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Connect Spotify — Vonage AI Demos</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   /* Matches the rest of the site's design system (see index.html /
      demo.html): system-font stack, navy #1A3D7C header/primary,
@@ -133,6 +134,14 @@
   .or-row{ display:flex; align-items:center; gap:10px; color:var(--muted); font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; margin:18px 0 12px; max-width:460px; }
   .or-row::before, .or-row::after{ content:""; flex:1; height:1px; background:var(--border); }
 
+  /* WhatsApp launch QR — same pattern as demo.html's #qrcode/.open-btn,
+     scaled down to sit inline in this page's left-aligned card instead of
+     demo.html's standalone centered layout. */
+  .qr-row{ display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+  .qr-box{ flex:none; display:inline-block; padding:10px; background:#fff; border:1px solid var(--border); border-radius:10px; line-height:0; }
+  .qr-side{ flex:1 1 220px; min-width:200px; max-width:300px; }
+  .qr-hint{ font-size:12px; color:var(--muted); line-height:1.5; margin:10px 0 0; }
+
   .section-label{ font-size:11px; font-weight:700; letter-spacing:.44px; text-transform:uppercase; color:var(--muted); margin:36px 0 14px; }
   .steps{ display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; }
   .step{ background:var(--surface); border-radius:14px; box-shadow:var(--shadow); padding:20px; }
@@ -173,7 +182,7 @@
   </div>
 
   <h1>Connect your Spotify</h1>
-  <p class="lede">The screen a listener lands on after tapping their personalised link from WhatsApp — before we know their genre, and before <code>henry_musicselection</code> goes out.</p>
+  <p class="lede">How it works: enter your name and WhatsApp number, scan the QR code below (or connect Spotify for an instant match), pick a genre if you're on WhatsApp, then get a hand-picked track sent straight back to that chat.</p>
 
   <div class="hero-photo">
     <img src="assets/music-lovers-hero.jpg" alt="A crowd dancing in front of a DJ booth">
@@ -218,7 +227,13 @@
         <span class="path-label">Pick a genre on WhatsApp</span>
       </div>
       <p class="collect-note">Works instantly for everyone — six genres, one hand-picked track sent straight back to the same WhatsApp chat.</p>
-      <a href="#" id="skipLink" class="btn btn-primary">Continue on WhatsApp</a>
+      <div class="qr-row">
+        <div id="waQrcode" class="qr-box"></div>
+        <div class="qr-side">
+          <a href="#" id="waOpenLink" class="btn btn-primary" target="_blank" rel="noopener">Open in WhatsApp</a>
+          <p class="qr-hint">Scan with your phone's camera, or tap Open on mobile — either way launches WhatsApp with this chat pre-filled.</p>
+        </div>
+      </div>
     </div>
 
     <div class="or-row">or</div>
@@ -314,13 +329,32 @@
     return 'Welcome to Music Lovers demo!';
   }
 
-  function updateSkipLink() {
+  // Renders the WhatsApp launch QR + "Open" button/link, matching
+  // demo.html's renderLaunchTarget() — same wa.me deep link, just scanned
+  // instead of tapped, so a visitor at a live demo can launch it from
+  // their own phone without anyone typing a link on someone else's
+  // device. Live-updates on every keystroke in the name field, same as
+  // demo.html's refreshDemo().
+  let waQr = null;
+  function renderWaQr() {
     const text = greetingText();
-    document.getElementById('skipLink').href = `https://wa.me/${WABA_NUMBER}?text=${encodeURIComponent(text)}`;
+    const url = `https://wa.me/${WABA_NUMBER}?text=${encodeURIComponent(text)}`;
+    const qrEl = document.getElementById('waQrcode');
+    qrEl.innerHTML = '';
+    try {
+      // correctLevel: L, same reasoning as demo.html — lowest error
+      // correction, highest data capacity, plenty for a wa.me URL this
+      // short, and it keeps this consistent with the rest of the site.
+      waQr = new QRCode(qrEl, { text: url, width: 160, height: 160, colorDark: '#10254D', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.L });
+    } catch (err) {
+      console.error('QR code rendering failed:', err.message);
+      qrEl.innerHTML = '<p style="font-size:12px;color:#B42318;padding:6px;max-width:160px;">Could not render the QR code — use the Open button instead.</p>';
+    }
+    document.getElementById('waOpenLink').href = url;
   }
 
-  document.getElementById('firstName').addEventListener('input', updateSkipLink);
-  updateSkipLink();
+  document.getElementById('firstName').addEventListener('input', renderWaQr);
+  renderWaQr();
 
   // --- Spotify connect (Authorization Code flow — see websocketcalls'
   // lib/spotifyOAuth.js). This page never talks to Spotify directly: it
