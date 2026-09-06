@@ -228,12 +228,7 @@
         <span class="badge soon">Limited access</span>
         <span class="path-label">Connect your Spotify</span>
       </div>
-      <p class="collect-note">Reads your top artists for an instant genre match — no WhatsApp question needed. This is a live developer preview: Spotify only lets us open it to accounts we've approved by hand. Enter your email below and we'll add you (usually within minutes) — or just use WhatsApp above while you wait.</p>
-
-      <div class="field-group" style="max-width:460px;">
-        <label class="field-label" for="testerEmail">Your email (for Spotify tester access)</label>
-        <input class="field" type="email" id="testerEmail" placeholder="e.g. henry@vonage.com" autocomplete="email">
-      </div>
+      <p class="collect-note">Reads your top artists for an instant genre match — no WhatsApp question needed.</p>
 
       <label class="field-label" for="waNumber">Your WhatsApp number</label>
       <div class="tester-row">
@@ -242,6 +237,12 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 10.5c5-1.4 10.2-1 14.5 1.3M5 14.3c4.2-1.1 8.6-.8 12.2 1.1M6 17.8c3.4-.8 6.9-.6 9.8.9" stroke="#04170B" stroke-width="2.1" stroke-linecap="round"/></svg>
           Share your Spotify playlists
         </button>
+      </div>
+
+      <div class="field-group" style="max-width:460px; margin-top:16px;">
+        <label class="field-label" for="testerEmail">Your email (optional)</label>
+        <input class="field" type="email" id="testerEmail" placeholder="e.g. henry@vonage.com" autocomplete="email">
+        <p class="collect-note" style="margin-top:6px; margin-bottom:0;">This is a live developer preview — Spotify only lets in accounts we've approved by hand. Add your email so we can grant you access to share your playlists (usually within minutes); leave it blank only if you already know you've been approved, otherwise Spotify will block the connection.</p>
       </div>
 
       <div class="tester-confirm">
@@ -335,20 +336,23 @@
 
   document.getElementById('spotifyConnectBtn').addEventListener('click', () => {
     const name = document.getElementById('firstName').value.trim();
-    const email = document.getElementById('testerEmail').value.trim();
     const waNumber = document.getElementById('waNumber').value.trim();
+    const email = document.getElementById('testerEmail').value.trim();
     const consent = document.getElementById('spotifyConsent').checked;
 
     if (!name) {
       showStatus('Enter your first name above first.', 'error');
       return;
     }
-    if (!EMAIL_RE.test(email)) {
-      showStatus('Enter a valid email — we use it to request Spotify tester access for you.', 'error');
-      return;
-    }
     if (!waNumber) {
       showStatus('Enter your WhatsApp number to continue.', 'error');
+      return;
+    }
+    // Email is optional — only validated if the visitor actually typed
+    // something (someone who already knows they're approved can leave it
+    // blank and go straight to Spotify below).
+    if (email && !EMAIL_RE.test(email)) {
+      showStatus('That email address doesn\'t look right — fix it or leave it blank to continue.', 'error');
       return;
     }
     if (!consent) {
@@ -356,19 +360,22 @@
       return;
     }
 
-    // Tells Henry (by email) to add this address under Spotify's User
-    // Management tab if it isn't already approved — see demo-notes.md's
-    // "Spotify Connect" section on why this manual step exists.
-    // `keepalive: true` lets the request finish even though the page
-    // navigates away right after (fire-and-forget on purpose: this
-    // shouldn't block or fail the actual connect attempt below, which
-    // works immediately for anyone already approved).
-    fetch(`${API_BASE}/api/spotify-tester-request`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, phone: waNumber }),
-      keepalive: true,
-    }).catch(() => {});
+    // Only ask Henry (by email) to add this address under Spotify's User
+    // Management tab when one was actually given — see demo-notes.md's
+    // "Spotify Connect" section on why this manual step exists. Skipped
+    // entirely for a visitor who left the field blank, since they've
+    // told us they're already approved. `keepalive: true` lets the
+    // request finish even though the page navigates away right after
+    // (fire-and-forget on purpose: this shouldn't block or fail the
+    // actual connect attempt below).
+    if (email) {
+      fetch(`${API_BASE}/api/spotify-tester-request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, phone: waNumber }),
+        keepalive: true,
+      }).catch(() => {});
+    }
 
     showStatus('Redirecting you to Spotify…', 'success');
     const params = new URLSearchParams({ phone: waNumber, name });
