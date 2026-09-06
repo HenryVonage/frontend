@@ -205,6 +205,11 @@
       <input class="field" id="firstName" placeholder="e.g. Henry">
     </div>
 
+    <div class="field-group">
+      <label class="field-label" for="waNumber">Your WhatsApp number</label>
+      <input class="field" type="tel" id="waNumber" placeholder="e.g. 07441 443052" autocomplete="tel">
+    </div>
+
     <!-- Primary path: works instantly for anyone, no approval needed. -->
     <div class="path-block">
       <div class="eyebrow-row" style="margin-bottom:8px;">
@@ -230,14 +235,10 @@
       </div>
       <p class="collect-note">Reads your top artists for an instant genre match — no WhatsApp question needed.</p>
 
-      <label class="field-label" for="waNumber">Your WhatsApp number</label>
-      <div class="tester-row">
-        <input class="field" type="tel" id="waNumber" placeholder="e.g. 07441 443052" autocomplete="tel">
-        <button class="btn btn-spotify" id="spotifyConnectBtn" type="button">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 10.5c5-1.4 10.2-1 14.5 1.3M5 14.3c4.2-1.1 8.6-.8 12.2 1.1M6 17.8c3.4-.8 6.9-.6 9.8.9" stroke="#04170B" stroke-width="2.1" stroke-linecap="round"/></svg>
-          Share your Spotify playlists
-        </button>
-      </div>
+      <button class="btn btn-spotify" id="spotifyConnectBtn" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 10.5c5-1.4 10.2-1 14.5 1.3M5 14.3c4.2-1.1 8.6-.8 12.2 1.1M6 17.8c3.4-.8 6.9-.6 9.8.9" stroke="#04170B" stroke-width="2.1" stroke-linecap="round"/></svg>
+        Share your Spotify playlists
+      </button>
 
       <div class="field-group" style="max-width:460px; margin-top:16px;">
         <label class="field-label" for="testerEmail">Your email (optional)</label>
