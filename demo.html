@@ -462,6 +462,7 @@
   <span class="brand">Vonage AI Demos</span>
   <a href="index.html">Home</a>
   <a href="demo.html" class="active">Try a Demo</a>
+  <a href="music-lovers.html">Music Lovers</a>
   <a href="logs.html">Logs</a>
   <a href="architecture.html">How it works</a>
 </nav>
@@ -613,7 +614,11 @@
   // family/familyLabel group same-demo-different-channel entries under one
   // picker card (see FAMILIES below) — reuse an existing family id to add
   // a new channel to an existing demo, or use a new one to add a whole new
-  // demo card.
+  // demo card. Each entry's own `id` also works as a page deep link —
+  // demo.html?demo=<id> opens straight to that demo/channel instead of
+  // the picker's default first entry (see the deep-link block below the
+  // FAMILIES setup), handy for sending a prospect a link to one specific
+  // demo without them navigating the picker themselves.
   const DEMOS = [
     {
       id: 'henry-real-estate',
@@ -787,6 +792,20 @@
   // default above.
   let selectedFamilyId = DEMOS[0].family;
   let selectedChannel = DEMOS[0].channel;
+
+  // Deep link support: ?demo=<id> (see each entry's `id` in DEMOS above)
+  // pre-selects a specific demo/channel on load — e.g. so a link shared
+  // with a prospect opens straight to Ticketing RCS instead of making
+  // them navigate the family/channel picker themselves. Silently falls
+  // back to DEMOS[0] (already the default above) on a missing or unknown
+  // id, same as the picker itself would if nothing were selected.
+  const deepLinkId = new URLSearchParams(window.location.search).get('demo');
+  const deepLinkDemo = deepLinkId ? DEMOS.find((d) => d.id === deepLinkId) : null;
+  if (deepLinkDemo) {
+    selectedFamilyId = deepLinkDemo.family;
+    selectedChannel = deepLinkDemo.channel;
+    currentDemoId = deepLinkDemo.id;
+  }
 
   function currentFamily() {
     return FAMILIES.find((f) => f.id === selectedFamilyId);
