@@ -4,33 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Logs — Vonage AI Demos</title>
+<link rel="stylesheet" href="site.css">
 <style>
-  :root {
-    --navy: #1a3d7c;
-    --navy-dark: #10254d;
-    --bg: #f4f6fb;
-    --card: #ffffff;
-    --text: #1f2430;
-    --muted: #6b7280;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-  }
-  nav {
-    background: var(--navy);
-    padding: 14px 24px;
-    display: flex;
-    gap: 20px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  nav a { color: #dbe4ff; text-decoration: none; font-size: 14px; font-weight: 500; }
-  nav a.active, nav a:hover { color: #fff; text-decoration: underline; }
-  nav .brand { color: #fff; font-weight: 700; margin-right: auto; font-size: 16px; }
   main { max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
   h1 { font-size: 26px; margin-bottom: 6px; }
   p.lead { color: var(--muted); margin-top: 0; margin-bottom: 28px; }
@@ -38,7 +13,7 @@
     background: var(--card);
     border-radius: 14px;
     padding: 28px;
-    box-shadow: 0 1px 3px rgba(16, 37, 77, 0.08), 0 8px 24px rgba(16, 37, 77, 0.06);
+    box-shadow: var(--shadow);
     margin-bottom: 24px;
   }
   .card h2 { font-size: 16px; margin-top: 0; color: var(--navy-dark); }
@@ -109,6 +84,7 @@
   <span class="brand">Vonage AI Demos</span>
   <a href="index.html">Home</a>
   <a href="demo.html">Try a Demo</a>
+  <a href="music-lovers.html">Music Lovers</a>
   <a href="logs.html" class="active">Logs</a>
   <a href="architecture.html">How it works</a>
 </nav>
@@ -158,11 +134,19 @@
     return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
+  // Cheap skip so a tab left open mid-demo isn't re-rendering the same
+  // 40 lines every 4s for no reason — only touches the DOM when the feed
+  // actually changed since the last poll.
+  let lastEventsKey = '';
+
   function renderFeed(events) {
     if (!events.length) {
       feedEl.textContent = 'No activity yet — try the demo to see it appear here.';
       return;
     }
+    const key = events.length + ':' + events[events.length - 1].ts;
+    if (key === lastEventsKey) return;
+    lastEventsKey = key;
     feedEl.innerHTML = events
       .slice(-40)
       .reverse()
@@ -188,8 +172,28 @@
     }
   }
 
-  pollLogs();
-  setInterval(pollLogs, 4000);
+  // Pauses polling while the tab is hidden (backgrounded or minimized) —
+  // this page is the one most likely left open on a laptop through an
+  // entire demo, so an idle background tab shouldn't keep hitting the
+  // backend every 4s. Resumes (and polls immediately, not after another
+  // 4s wait) as soon as it's visible again.
+  let pollTimer = null;
+  function startPolling() {
+    if (pollTimer) return;
+    pollLogs();
+    pollTimer = setInterval(pollLogs, 4000);
+  }
+  function stopPolling() {
+    if (!pollTimer) return;
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopPolling();
+    else startPolling();
+  });
+
+  if (!document.hidden) startPolling();
 </script>
 
 </body>

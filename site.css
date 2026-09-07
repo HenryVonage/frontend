@@ -1,0 +1,44 @@
+/* Shared design tokens + base layout for every page on this site
+   (index.html, demo.html, architecture.html, logs.html,
+   music-lovers.html). Load this before each page's own <style> block —
+   a page can still define its own page-specific rules/tokens after this,
+   it just shouldn't redefine anything already here.
+
+   Extracted 2026-09: previously each page hand-rolled its own identical
+   (or near-identical, see music-lovers.html's differently-named tokens)
+   copy of the :root tokens and nav styling, so a rebrand or a WABA
+   number/API host change meant a find-and-replace across every file
+   instead of a one-line edit here. See also site.js for the shared JS
+   this pairs with (phone/email validation, the QR-render helper). */
+:root {
+  --navy: #1a3d7c;
+  --navy-dark: #10254d;
+  --bg: #f4f6fb;
+  --card: #ffffff;
+  --text: #1f2430;
+  --muted: #6b7280;
+  --accent: #22c55e;
+  --shadow: 0 1px 3px rgba(16, 37, 77, 0.08), 0 8px 24px rgba(16, 37, 77, 0.06);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+}
+
+nav {
+  background: var(--navy);
+  padding: 14px 24px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+nav a { color: #dbe4ff; text-decoration: none; font-size: 14px; font-weight: 500; }
+nav a.active, nav a:hover { color: #fff; text-decoration: underline; }
+nav .brand { color: #fff; font-weight: 700; margin-right: auto; font-size: 16px; }
