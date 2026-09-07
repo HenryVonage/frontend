@@ -4,40 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Try a Demo — Vonage AI Demos</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="stylesheet" href="site.css">
 <style>
-  :root {
-    --navy: #1a3d7c;
-    --navy-dark: #10254d;
-    --bg: #f4f6fb;
-    --card: #ffffff;
-    --text: #1f2430;
-    --muted: #6b7280;
-    --accent: #22c55e;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-  }
-  nav {
-    background: var(--navy);
-    padding: 14px 24px;
-    display: flex;
-    gap: 20px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  nav a {
-    color: #dbe4ff;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-  }
-  nav a.active, nav a:hover { color: #fff; text-decoration: underline; }
-  nav .brand { color: #fff; font-weight: 700; margin-right: auto; font-size: 16px; }
   main {
     max-width: 1060px;
     margin: 0 auto;
@@ -75,15 +43,15 @@
      video panel is also showing — there's rarely leftover space to fill
      in that case. */
   .side-column .feedback-card { flex: 1 1 auto; }
-  /* Hidden by default; only shown for demos with a recordingId or
-     videoSrc (see updateDemoInfo() in the script below). */
+  /* Hidden by default; only shown for demos with a videoSrc (see
+     updateDemoInfo() in the script below). */
   .video-panel { display: none; }
   .video-panel.visible { display: block; }
   .video-panel-inner {
     background: var(--card);
     border-radius: 14px;
     padding: 16px;
-    box-shadow: 0 1px 3px rgba(16, 37, 77, 0.08), 0 8px 24px rgba(16, 37, 77, 0.06);
+    box-shadow: var(--shadow);
   }
   .video-caption {
     margin: 0 0 12px;
@@ -101,60 +69,6 @@
     overflow: hidden;
     background: #000;
   }
-  .video-embed iframe {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
-    /* Sits UNDER the poster/play button below (z-index) — otherwise this
-       still-present-but-empty iframe, being later in the DOM, paints on
-       top of them and silently swallows every click, which is exactly
-       what made the play button unclickable. */
-    z-index: 1;
-  }
-  /* Click-to-play poster (see updateDemoInfo()) — shown instead of the
-     Drive iframe until tapped, so a demo can show a picture of its own
-     conversation instead of Drive's generic thumbnail, and the embed
-     isn't fetched at all for visitors who never click play. Hidden by
-     default; only demos with a posterImage use this (others still load
-     the iframe immediately, unchanged). */
-  .video-poster {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    cursor: pointer;
-    display: none;
-    z-index: 2;
-  }
-  .video-poster.visible { display: block; }
-  .video-play-btn {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: rgba(16, 37, 77, 0.78);
-    border: 2px solid rgba(255, 255, 255, 0.9);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 3;
-    color: #fff;
-    padding: 0;
-    transition: background 0.15s ease, transform 0.15s ease;
-  }
-  .video-play-btn.visible { display: flex; }
-  .video-play-btn:hover {
-    background: rgba(16, 37, 77, 0.95);
-    transform: translate(-50%, -50%) scale(1.06);
-  }
-  .video-play-btn svg { margin-left: 3px; }
   /* Self-hosted <video> for demos with a videoSrc (Real Estate RCS,
      Ticketing RCS, Ticketing WhatsApp — see updateDemoInfo()). object-fit:contain rather than
      cover: the recording's own aspect ratio is taller/narrower than this
@@ -180,9 +94,9 @@
     background: var(--card);
     border-radius: 14px;
     padding: 28px;
-    box-shadow: 0 1px 3px rgba(16, 37, 77, 0.08), 0 8px 24px rgba(16, 37, 77, 0.06);
+    box-shadow: var(--shadow);
   }
-  label {
+  label, .picker-label {
     display: block;
     font-size: 13px;
     font-weight: 600;
@@ -377,7 +291,7 @@
     background: var(--card);
     border-radius: 14px;
     padding: 22px 24px;
-    box-shadow: 0 1px 3px rgba(16, 37, 77, 0.08), 0 8px 24px rgba(16, 37, 77, 0.06);
+    box-shadow: var(--shadow);
   }
   .arch-card h2 {
     font-size: 15px;
@@ -474,7 +388,7 @@
     background: var(--card);
     border-radius: 14px;
     padding: 18px 20px;
-    box-shadow: 0 1px 3px rgba(16, 37, 77, 0.08), 0 8px 24px rgba(16, 37, 77, 0.06);
+    box-shadow: var(--shadow);
   }
   .feedback-card h2 {
     font-size: 15px;
@@ -562,13 +476,12 @@
     <label for="firstName">Your first name</label>
     <input type="text" id="firstName" placeholder="e.g. Henry" autocomplete="given-name">
 
-    <label>Choose a demo</label>
-    <div id="familyPicker" class="family-picker"></div>
+    <div class="picker-label" id="familyPickerLabel">Choose a demo</div>
+    <div id="familyPicker" class="family-picker" role="group" aria-labelledby="familyPickerLabel"></div>
 
-    <label id="channelPickerLabel" class="channel-picker-label">Choose a channel</label>
-    <div id="channelPicker" class="channel-picker"></div>
+    <div id="channelPickerLabel" class="picker-label channel-picker-label">Choose a channel</div>
+    <div id="channelPicker" class="channel-picker" role="group" aria-labelledby="channelPickerLabel"></div>
 
-    <select id="demoSelect" style="display:none" aria-hidden="true" tabindex="-1"></select>
 
     <div id="demoInfo" class="demo-info"></div>
 
@@ -604,11 +517,6 @@
       <div class="video-panel-inner">
         <p class="video-caption" id="videoCaptionText">See this demo in action.</p>
         <div class="video-embed">
-          <img id="videoPoster" class="video-poster" alt="" />
-          <button id="videoPlayBtn" class="video-play-btn" type="button" aria-label="Play video">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-          </button>
-          <iframe id="videoFrame" src="" allow="autoplay" allowfullscreen loading="lazy"></iframe>
           <video id="videoLocal" playsinline preload="none" controls></video>
         </div>
       </div>
@@ -695,6 +603,8 @@
   </div>
 </main>
 
+<script src="assets/vendor/qrcode.min.js"></script>
+<script src="site.js"></script>
 <script>
   // Portfolio of demos. Add a new entry here to add it to the picker — no
   // other page changes required, as long as the entry's channel is either
@@ -844,20 +754,14 @@
     // },
   ];
 
-  // `select` stays the single source of truth for "which demo is currently
-  // active" — every function below (updateDemoInfo, refreshDemo, the
-  // feedback handler) reads select.value exactly as it did when this was a
-  // real <select>. It's now hidden and driven programmatically by the
-  // family/channel picker below instead of by the user directly, so its
-  // own 'change' event is never used — callers call refreshAll() directly
-  // once they've set select.value.
-  const select = document.getElementById('demoSelect');
-  DEMOS.forEach((demo) => {
-    const opt = document.createElement('option');
-    opt.value = demo.id;
-    opt.textContent = demo.label;
-    select.appendChild(opt);
-  });
+  // `currentDemoId` is the single source of truth for "which demo is
+  // currently active" — every function below (updateDemoInfo, refreshDemo,
+  // the feedback handler) reads it. Used to be stored as the .value of a
+  // hidden, programmatically-driven <select> (a holdover from before the
+  // family/channel picker below replaced the real dropdown) rather than a
+  // plain variable — removed in the 2026-09 cleanup pass since the DOM
+  // element wasn't doing anything a variable doesn't do more simply.
+  let currentDemoId = DEMOS[0].id;
 
   // Groups DEMOS entries sharing a `family` id under one picker card, e.g.
   // "Henry's Real Estate" → { whatsapp: 'henry-real-estate', rcs:
@@ -879,8 +783,8 @@
   const channelPickerEl = document.getElementById('channelPicker');
   const channelPickerLabel = document.getElementById('channelPickerLabel');
 
-  // Defaults to DEMOS[0]'s family/channel — matches the old <select>'s
-  // default behavior of auto-selecting its first <option>.
+  // Defaults to DEMOS[0]'s family/channel — matches currentDemoId's own
+  // default above.
   let selectedFamilyId = DEMOS[0].family;
   let selectedChannel = DEMOS[0].channel;
 
@@ -927,13 +831,13 @@
   // previously-selected channel doesn't exist on the newly-picked family
   // (e.g. a future family that only has WhatsApp) — then re-renders both
   // pickers (so .selected styling stays in sync) and refreshes the QR /
-  // demo-info panel exactly as the old select's 'change' handler did.
+  // demo-info panel.
   function applyDemoSelection() {
     const fam = currentFamily();
     if (!fam.channels[selectedChannel]) {
       selectedChannel = Object.keys(fam.channels)[0];
     }
-    select.value = fam.channels[selectedChannel];
+    currentDemoId = fam.channels[selectedChannel];
     renderFamilyPicker();
     renderChannelPicker();
     refreshAll();
@@ -989,10 +893,10 @@
   // start rather than gated behind a button press.
   function greetingFor(demo, name) {
     if (name) return demo.greeting(name);
-    // Apostrophe-free on purpose (see the greeting() functions above) —
-    // built from the label but with any apostrophes stripped, rather than
-    // reusing demo.label as-is (which has "Henry's" for on-screen display).
-    return `Welcome to ${demo.label.replace(/\s*\([^)]*\)\s*$/, '').replace(/'/g, '')} demo!`;
+    // Fallback derivation lives in site.js (greetingFallback) — shared
+    // with music-lovers.html so the two don't drift the way they had
+    // before the 2026-09 cleanup pass.
+    return greetingFallback(demo.label);
   }
 
   function buildLaunchUrl(demo, name) {
@@ -1025,7 +929,7 @@
   // page load and every time the demo picker changes — independent of
   // whether a QR code has been generated yet.
   function updateDemoInfo() {
-    const demo = DEMOS.find((d) => d.id === select.value) || DEMOS[0];
+    const demo = DEMOS.find((d) => d.id === currentDemoId) || DEMOS[0];
     const channelLabel = demo.channel === 'rcs' ? 'RCS' : 'WhatsApp';
 
     const info = document.getElementById('demoInfo');
@@ -1044,38 +948,27 @@
     document.getElementById('archVoiceLabel').textContent = arch.voiceLabel;
 
     // The recorded walkthrough video panel shows for any demo that
-    // declares a recordingId or a videoSrc — widens the layout to fit it
-    // only while visible. recordingId demos embed Google Drive's /preview
-    // (Drive's own supported embed, works for anyone with view access,
-    // unlike the direct-download link which hits a "can't scan for
-    // viruses" interstitial for non-owners) — no demo currently uses this
-    // path, but it's kept for any future recording small enough that
-    // Drive's fallback interstitial isn't a risk. videoSrc demos (all four
-    // current recordings) instead use a plain self-hosted <video> — every
-    // one of them started on recordingId and got moved here after its
-    // Drive recording turned out large enough that /preview fell back to
-    // a degraded, ad-supported interstitial instead of the real player,
-    // forcing a second click to actually start playback; a local file
-    // can't hit that fallback. Both the iframe src and the video src are
-    // cleared whenever hidden so switching to a demo with no recording
-    // actually stops playback instead of leaving it running off-screen.
+    // declares a videoSrc — widens the layout to fit it only while
+    // visible. Plain self-hosted <video>: every one of the four current
+    // recordings started out embedded via Google Drive's /preview
+    // iframe, but Drive's own fallback (a degraded, ad-supported
+    // interstitial for files too large to preview directly) forced a
+    // second click just to start playback, so all four were moved to a
+    // local file instead — a local file can't hit that fallback. (An
+    // earlier version of this function also supported a recordingId
+    // path that rendered the Drive iframe behind a click-to-play poster
+    // for demos small enough not to need self-hosting; nothing used it
+    // by the time of the 2026-09 cleanup pass, so it was removed —
+    // recoverable from git history if a future recording is small
+    // enough to want it back.) The video src is cleared whenever hidden
+    // so switching to a demo with no recording actually stops playback
+    // instead of leaving it running off-screen.
     const videoPanel = document.getElementById('videoPanel');
-    const videoFrame = document.getElementById('videoFrame');
-    const videoPoster = document.getElementById('videoPoster');
-    const videoPlayBtn = document.getElementById('videoPlayBtn');
     const videoLocal = document.getElementById('videoLocal');
-    const showVideo = !!demo.recordingId || !!demo.videoSrc;
+    const showVideo = !!demo.videoSrc;
     videoPanel.classList.toggle('visible', showVideo);
-    const embedUrl = (showVideo && demo.recordingId) ? `https://drive.google.com/file/d/${demo.recordingId}/preview` : '';
     if (showVideo) {
       document.getElementById('videoCaptionText').textContent = demo.videoCaption || 'See this demo in action.';
-    }
-    if (showVideo && demo.videoSrc) {
-      videoFrame.src = '';
-      videoFrame.dataset.pendingSrc = '';
-      videoFrame.style.display = 'none';
-      videoPoster.classList.remove('visible');
-      videoPlayBtn.classList.remove('visible');
       videoLocal.poster = demo.posterImage || '';
       videoLocal.src = demo.videoSrc;
       videoLocal.style.display = 'block';
@@ -1083,21 +976,6 @@
       videoLocal.style.display = 'none';
       videoLocal.removeAttribute('src');
       videoLocal.load();
-      videoFrame.style.display = '';
-      if (showVideo && demo.posterImage) {
-        // Hold off loading the iframe until the poster is actually
-        // clicked — see playVideoFromPoster() below.
-        videoFrame.src = '';
-        videoFrame.dataset.pendingSrc = embedUrl;
-        videoPoster.src = demo.posterImage;
-        videoPoster.classList.add('visible');
-        videoPlayBtn.classList.add('visible');
-      } else {
-        videoFrame.dataset.pendingSrc = '';
-        videoPoster.classList.remove('visible');
-        videoPlayBtn.classList.remove('visible');
-        videoFrame.src = embedUrl;
-      }
     }
 
     // The tester-registration step only applies to the RCS demo — its
@@ -1143,16 +1021,8 @@
   // the chat actually opens — the checkbox below tracks that second step
   // (confirmed the hard way: registration succeeded but scanning still
   // failed until the SMS invite was accepted).
-  // Loose E.164 check (leading "+", country code, 7-15 digits total) —
-  // just catches the common mistake of typing a local-format number (e.g.
-  // "07441 443052") without a country code, which the backend can't
-  // reliably guess for every visitor. Spaces/dashes are stripped before
-  // testing since the placeholder models a spaced-out international
-  // number and people naturally type it that way.
-  const INTL_PHONE_RE = /^\+[1-9]\d{6,14}$/;
-  function isValidInternationalPhone(value) {
-    return INTL_PHONE_RE.test(value.replace(/[\s-]/g, ''));
-  }
+  // isValidInternationalPhone (loose E.164 check) lives in site.js —
+  // shared with music-lovers.html, which had an identical copy.
 
   async function registerTester() {
     const input = document.getElementById('testerPhone');
@@ -1259,34 +1129,18 @@
     refreshDemo();
   }
 
-  let qr = null;
-
   // Renders whatever launch URL is current (QR + Open button + raw link)
   // — factored out of refreshDemo() so both the immediate fallback render
   // and the later official-deeplink upgrade (see fetchOfficialRcsDeeplink
-  // below) can share it.
+  // below) can share it. QR rendering itself (renderQrCode, incl. the
+  // correctLevel/try-catch reasoning) lives in site.js, shared with
+  // music-lovers.html.
   function renderLaunchTarget(url, labels) {
     const qrEl = document.getElementById('qrcode');
     const rawLinkEl = document.getElementById('rawLink');
-    qrEl.innerHTML = '';
-    // correctLevel: L (lowest error-correction, highest data capacity) —
-    // the qrcodejs library defaults to H, which throws 'code length
-    // overflow' once the officially Vonage-generated deep link (much
-    // longer than the hand-built sms: fallback) has loaded and a greeting
-    // is appended. L still scans reliably; needed headroom outweighs the
-    // small resilience tradeoff for a demo QR shown on a controlled screen.
-    // Wrapped in try/catch on top of that: this used to throw straight
-    // out of refreshDemo(), which registerTester() calls inside its own
-    // try block — surfacing here as a wildly misleading 'Network error
-    // registering that number' even though registration had succeeded.
-    // Now it degrades to a text fallback instead, and the Open link /
-    // raw link below (which don't depend on the QR rendering) still work.
-    try {
-      qr = new QRCode(qrEl, { text: url, width: 220, height: 220, colorDark: '#10254d', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.L });
-    } catch (err) {
-      console.error('QR code rendering failed:', err.message);
-      qrEl.innerHTML = '<p style="font-size:13px;color:#b91c1c;padding:8px;">Could not render the QR code (link too long) — use the "Open" button or raw link below instead.</p>';
-    }
+    renderQrCode(qrEl, url, {
+      errorHtml: '<p style="font-size:13px;color:#b91c1c;padding:8px;">Could not render the QR code (link too long) — use the "Open" button or raw link below instead.</p>',
+    });
 
     const openLink = document.getElementById('openLink');
     openLink.href = url;
@@ -1334,7 +1188,7 @@
     const nameInput = document.getElementById('firstName');
     const name = nameInput.value.trim();
 
-    const demo = DEMOS.find((d) => d.id === select.value);
+    const demo = DEMOS.find((d) => d.id === currentDemoId);
     const fallbackUrl = buildLaunchUrl(demo, name);
     const labels = CHANNEL_LABELS[demo.channel] || CHANNEL_LABELS.whatsapp;
 
@@ -1404,35 +1258,21 @@
     refreshDemo();
   }
 
-  // No 'change' listener on select itself — it's hidden and only ever
-  // written to programmatically (see applyDemoSelection() above), which
-  // doesn't fire a real 'change' event, so callers that set it call
-  // refreshAll() directly instead.
+  // currentDemoId only ever changes via applyDemoSelection() above, which
+  // calls refreshAll() itself once it's set — no separate listener needed
+  // for it here.
   document.getElementById('firstName').addEventListener('input', refreshDemo);
   refreshAll();
-
-  // Poster → iframe swap for demos with a posterImage (see
-  // updateDemoInfo()) — loads the Drive embed only once the visitor
-  // actually clicks play.
-  function playVideoFromPoster() {
-    const frame = document.getElementById('videoFrame');
-    if (!frame.dataset.pendingSrc) return;
-    frame.src = frame.dataset.pendingSrc;
-    document.getElementById('videoPoster').classList.remove('visible');
-    document.getElementById('videoPlayBtn').classList.remove('visible');
-  }
-  document.getElementById('videoPoster').addEventListener('click', playVideoFromPoster);
-  document.getElementById('videoPlayBtn').addEventListener('click', playVideoFromPoster);
 
   // --- Feedback form: comment/question + optional photo/video, emailed to
   // Henry via the backend's /api/feedback (see server.js +
   // lib/feedbackMailer.js) ---
   const FEEDBACK_MAX_TOTAL_BYTES = 15 * 1024 * 1024;
-  // Same intentionally-simple shape as the server-side check in
-  // lib/feedbackMailer.js — this is a first line of defense so a visitor
-  // gets instant feedback on an obvious typo; the backend re-validates
-  // regardless, since client-side checks are never trustworthy alone.
-  const FEEDBACK_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // isValidEmail (site.js) is the same intentionally-simple shape as the
+  // server-side check in lib/feedbackMailer.js — this is a first line of
+  // defense so a visitor gets instant feedback on an obvious typo; the
+  // backend re-validates regardless, since client-side checks are never
+  // trustworthy alone.
 
   const feedbackForm = document.getElementById('feedbackForm');
   const feedbackEmailInput = document.getElementById('feedbackEmail');
@@ -1441,10 +1281,6 @@
   const feedbackFileError = document.getElementById('feedbackFileError');
   const feedbackStatus = document.getElementById('feedbackStatus');
   const feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
-
-  function isValidFeedbackEmail(value) {
-    return FEEDBACK_EMAIL_RE.test(value.trim());
-  }
 
   feedbackEmailInput.addEventListener('input', () => {
     feedbackEmailInput.classList.remove('invalid');
@@ -1466,7 +1302,7 @@
 
     const email = feedbackEmailInput.value.trim();
     let valid = true;
-    if (!isValidFeedbackEmail(email)) {
+    if (!isValidEmail(email)) {
       feedbackEmailInput.classList.add('invalid');
       feedbackEmailError.classList.add('visible');
       valid = false;
@@ -1479,7 +1315,7 @@
     }
     if (!valid) return;
 
-    const currentDemo = DEMOS.find((d) => d.id === select.value);
+    const currentDemo = DEMOS.find((d) => d.id === currentDemoId);
 
     const formData = new FormData();
     formData.append('name', document.getElementById('feedbackName').value.trim());

@@ -4,20 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Connect Spotify — Vonage AI Demos</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="stylesheet" href="site.css">
 <style>
-  /* Matches the rest of the site's design system (see index.html /
-     demo.html): system-font stack, navy #1A3D7C header/primary,
-     off-white #F4F6FB ground, white rounded cards, the "demo-info"
-     description panel, and the phone-number + consent pattern used by
-     the RCS tester-registration row. */
+  /* Shared tokens (--navy, --navy-dark, --bg, --card, --text, --muted,
+     --shadow, --font-sans) and nav styling now live in site.css, same as
+     every other page — this block only adds the tokens/rules specific to
+     this page (Spotify/WhatsApp badge colors, the demo-info panel, the
+     phone-number + consent pattern used by the RCS tester-registration
+     row elsewhere on the site). */
   :root{
-    --navy:#1A3D7C;
-    --navy-deep:#10254D;
-    --ink:#1F2430;
-    --muted:#6B7280;
-    --page-bg:#F4F6FB;
-    --surface:#FFFFFF;
     --surface-soft:#FBFCFE;
     --border:#D7DCE6;
     --badge-bg:#EEF2FB;
@@ -26,30 +21,11 @@
     --whatsapp-bg:#DCFCE7; --whatsapp-text:#15803D;
     --spotify:#1DB954; --spotify-ink:#04170B;
     --soon-bg:#B45309; --soon-text:#7C4A03;
-    --shadow: 0 1px 3px rgba(16,37,77,.08), 0 8px 24px rgba(16,37,77,.06);
   }
 
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{
-    background:var(--page-bg);
-    color:var(--ink);
-    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
+  html{ margin:0; padding:0; }
+  body{ -webkit-font-smoothing:antialiased; }
   code{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
-
-  nav{
-    background:var(--navy);
-    padding:14px 24px;
-    display:flex;
-    align-items:center;
-    gap:20px;
-    flex-wrap:wrap;
-  }
-  nav a{ color:#DBE4FF; text-decoration:none; font-size:14px; font-weight:500; }
-  nav a.active, nav a:hover{ color:#fff; text-decoration:underline; }
-  nav .brand{ color:#fff; font-weight:700; margin-right:auto; font-size:16px; }
 
   main{ max-width:880px; margin:0 auto; padding:40px 20px 80px; }
 
@@ -77,13 +53,13 @@
   .hero-photo .caption h2{ margin:0 0 3px; font-size:22px; font-weight:700; }
   .hero-photo .caption p{ margin:0; font-size:13px; color:#E4E8F5; }
 
-  .card{ background:var(--surface); border-radius:14px; box-shadow:var(--shadow); padding:24px; margin-top:20px; }
-  .card > h3.title{ margin:0 0 16px; font-size:19px; font-weight:700; color:var(--navy-deep); }
+  .card{ background:var(--card); border-radius:14px; box-shadow:var(--shadow); padding:24px; margin-top:20px; }
+  .card > h3.title{ margin:0 0 16px; font-size:19px; font-weight:700; color:var(--navy-dark); }
 
-  label.field-label{ display:block; font-size:13px; font-weight:600; color:var(--navy-deep); margin-bottom:6px; }
+  label.field-label{ display:block; font-size:13px; font-weight:600; color:var(--navy-dark); margin-bottom:6px; }
   input.field{
     width:100%; background:var(--surface-soft); border:1px solid var(--border);
-    border-radius:8px; padding:12px 14px; font-size:15px; color:var(--ink);
+    border-radius:8px; padding:12px 14px; font-size:15px; color:var(--text);
     font-family:inherit;
   }
   input.field::placeholder{ color:#9CA3AF; }
@@ -94,38 +70,32 @@
     background:var(--panel-bg); border:1px solid var(--panel-border); border-radius:10px;
     padding:16px 18px; margin:4px 0 22px;
   }
-  .demo-info p.desc{ margin:8px 0 10px; font-size:13.5px; line-height:1.55; color:var(--ink); }
+  .demo-info p.desc{ margin:8px 0 10px; font-size:13.5px; line-height:1.55; color:var(--text); }
   .demo-info ul{ margin:0 0 10px; padding:0 0 0 18px; }
-  .demo-info li{ font-size:13px; line-height:1.7; color:var(--ink); }
+  .demo-info li{ font-size:13px; line-height:1.7; color:var(--text); }
   .demo-info p.stack-note{
     margin:0; padding:10px 0 0; border-top:1px dashed var(--border);
     font-size:12px; color:var(--muted);
   }
 
-  /* tester-row / tester-confirm pattern, matching the RCS phone-registration flow */
   .spotify-block{ position:relative; }
-  .spotify-block.disabled{ opacity:.6; }
   .badge.ready{ background:var(--whatsapp-bg); color:var(--whatsapp-text); }
-  .path-label{ font-size:15px; font-weight:700; color:var(--navy-deep); }
+  .path-label{ font-size:15px; font-weight:700; color:var(--navy-dark); }
   .path-block{ margin-bottom:22px; }
   .path-block:last-child{ margin-bottom:0; }
   .btn-primary{ background:var(--navy); color:#fff; }
-  .btn-primary:hover{ background:var(--navy-deep); }
+  .btn-primary:hover{ background:var(--navy-dark); }
   .collect-note{ font-size:12.5px; color:var(--muted); line-height:1.5; margin:0 0 10px; max-width:460px; }
   .connect-status{ font-size:12.5px; line-height:1.5; margin:10px 0 0; max-width:460px; display:none; }
   .connect-status.show{ display:block; }
   .connect-status.error{ color:#B42318; }
   .connect-status.success{ color:#15803D; }
-  .tester-row{ display:flex; gap:8px; max-width:460px; }
-  .tester-row input.field{ flex:1 1 0%; }
   .btn{
     display:flex; align-items:center; justify-content:center; gap:8px; flex:0 0 auto;
     border-radius:8px; padding:12px 20px; font-size:14px; font-weight:700;
     border:1px solid transparent; cursor:pointer; text-decoration:none; white-space:nowrap;
   }
   .btn-spotify{ background:var(--spotify); color:var(--spotify-ink); box-shadow:0 8px 18px -8px rgba(29,185,84,.55); }
-  .btn-spotify[disabled], .btn-spotify.disabled{ cursor:not-allowed; pointer-events:none; box-shadow:none; }
-  .btn-secondary{ background:var(--surface); border:1px solid var(--border); color:var(--navy); font-weight:600; }
 
   .tester-confirm{ display:flex; align-items:flex-start; gap:10px; margin:14px 0 0; padding:12px 0 0; border-top:1px dashed var(--border); max-width:460px; }
   .tester-confirm input[type="checkbox"]{ margin-top:2px; flex:none; }
@@ -144,13 +114,13 @@
 
   .section-label{ font-size:11px; font-weight:700; letter-spacing:.44px; text-transform:uppercase; color:var(--muted); margin:36px 0 14px; }
   .steps{ display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; }
-  .step{ background:var(--surface); border-radius:14px; box-shadow:var(--shadow); padding:20px; }
+  .step{ background:var(--card); border-radius:14px; box-shadow:var(--shadow); padding:20px; }
   .step .num{ display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; background:var(--navy); color:#fff; font-size:12px; font-weight:700; border-radius:50%; margin-bottom:12px; }
-  .step h4{ margin:0 0 6px; font-size:14.5px; font-weight:700; color:var(--ink); }
+  .step h4{ margin:0 0 6px; font-size:14.5px; font-weight:700; color:var(--text); }
   .step p{ margin:0 0 10px; font-size:13px; line-height:1.55; color:var(--muted); }
   .step .tpl{ display:inline-block; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:10.5px; background:var(--badge-bg); color:var(--navy); padding:3px 8px; border-radius:6px; }
 
-  .genre-block{ margin-top:22px; background:var(--surface); border-radius:14px; box-shadow:var(--shadow); padding:20px 24px; }
+  .genre-block{ margin-top:22px; background:var(--card); border-radius:14px; box-shadow:var(--shadow); padding:20px 24px; }
   .genre-block p{ margin:0 0 12px; font-size:13.5px; color:var(--muted); line-height:1.55; }
   .genre-block p code{ background:var(--badge-bg); color:var(--navy); padding:.08em .4em; border-radius:5px; font-size:.92em; }
   .chips{ display:flex; flex-wrap:wrap; gap:8px; }
@@ -162,7 +132,6 @@
     .steps{ grid-template-columns:1fr; }
     nav{ flex-wrap:wrap; gap:14px; }
     .hero-photo{ height:200px; }
-    .tester-row{ flex-direction:column; align-items:stretch; }
   }
 </style>
 </head>
@@ -308,6 +277,8 @@
   <footer class="note">WhatsApp genre picking works instantly for everyone. Spotify connect is a live developer preview (read-only, revoke anytime in Spotify settings) — currently limited to approved testers while Spotify's app review is pending.</footer>
 </main>
 
+<script src="assets/vendor/qrcode.min.js"></script>
+<script src="site.js"></script>
 <script>
   // Same backend behind every demo in the portfolio (see demo.html's own
   // API_BASE) — Spotify connect adds two routes to it (server.js's
@@ -322,11 +293,16 @@
   const WABA_NUMBER = '447520691413';
 
   // Apostrophe-free on purpose, matching demo.html's greetingFor() — some
-  // deep-link/QR consumers mishandle the encoded apostrophe.
+  // deep-link/QR consumers mishandle the encoded apostrophe. The no-name
+  // fallback is greetingFallback() from site.js (shared with demo.html)
+  // rather than a separately hand-typed literal, so the two can't drift
+  // the way they had before the 2026-09 cleanup pass — "Music Lovers" has
+  // no parenthetical suffix or apostrophe for it to strip, so the output
+  // is unchanged: "Welcome to Music Lovers demo!".
   function greetingText() {
     const name = document.getElementById('firstName').value.trim();
     if (name) return `Hi, Im ${name} — Welcome to Music Lovers demo!`;
-    return 'Welcome to Music Lovers demo!';
+    return greetingFallback('Music Lovers');
   }
 
   // Renders the WhatsApp launch QR + "Open" button/link, matching
@@ -334,22 +310,17 @@
   // instead of tapped, so a visitor at a live demo can launch it from
   // their own phone without anyone typing a link on someone else's
   // device. Live-updates on every keystroke in the name field, same as
-  // demo.html's refreshDemo().
-  let waQr = null;
+  // demo.html's refreshDemo(). QR rendering itself (renderQrCode, incl.
+  // the correctLevel/try-catch reasoning) lives in site.js.
   function renderWaQr() {
     const text = greetingText();
     const url = `https://wa.me/${WABA_NUMBER}?text=${encodeURIComponent(text)}`;
     const qrEl = document.getElementById('waQrcode');
-    qrEl.innerHTML = '';
-    try {
-      // correctLevel: L, same reasoning as demo.html — lowest error
-      // correction, highest data capacity, plenty for a wa.me URL this
-      // short, and it keeps this consistent with the rest of the site.
-      waQr = new QRCode(qrEl, { text: url, width: 160, height: 160, colorDark: '#10254D', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.L });
-    } catch (err) {
-      console.error('QR code rendering failed:', err.message);
-      qrEl.innerHTML = '<p style="font-size:12px;color:#B42318;padding:6px;max-width:160px;">Could not render the QR code — use the Open button instead.</p>';
-    }
+    renderQrCode(qrEl, url, {
+      width: 160,
+      height: 160,
+      errorHtml: '<p style="font-size:12px;color:#B42318;padding:6px;max-width:160px;">Could not render the QR code — use the Open button instead.</p>',
+    });
     document.getElementById('waOpenLink').href = url;
   }
 
@@ -363,17 +334,8 @@
   // Spotify's consent screen, then Spotify calls the backend back, which
   // redirects here again with a ?spotify= status. ---
   const statusEl = document.getElementById('connectStatus');
-  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  // Loose E.164 check (leading "+", country code, 7-15 digits total) —
-  // just catches the common mistake of typing a local-format number (e.g.
-  // "07441 443052") without a country code, which the backend can't
-  // reliably guess for every visitor. Spaces/dashes are stripped before
-  // testing since the placeholder models a spaced-out international
-  // number and people naturally type it that way.
-  const INTL_PHONE_RE = /^\+[1-9]\d{6,14}$/;
-  function isValidInternationalPhone(value) {
-    return INTL_PHONE_RE.test(value.replace(/[\s-]/g, ''));
-  }
+  // isValidEmail / isValidInternationalPhone (loose E.164 check) live in
+  // site.js — shared with demo.html, which had an identical phone regex.
 
   function showStatus(text, kind) {
     statusEl.textContent = text;
@@ -401,7 +363,7 @@
     // Email is optional — only validated if the visitor actually typed
     // something (someone who already knows they're approved can leave it
     // blank and go straight to Spotify below).
-    if (email && !EMAIL_RE.test(email)) {
+    if (email && !isValidEmail(email)) {
       showStatus('That email address doesn\'t look right — fix it or leave it blank to continue.', 'error');
       return;
     }
