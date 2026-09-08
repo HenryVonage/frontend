@@ -67,6 +67,27 @@
   }
   .channel-tag.whatsapp { background: #dcfce7; color: #15803d; }
   .channel-tag.rcs { background: #dbeafe; color: #1d4ed8; }
+  /* Music Lovers on hold (Henry, Sept 2026) — a few backend pieces
+     (Ticketmaster concerts geo-search, ringtone polish) are still being
+     finished, so the card is greyed out and unclickable rather than
+     linking to a demo that isn't ready for a visitor to try yet. To bring
+     it back: drop the "demo-card-disabled" class and "aria-disabled"
+     attribute, restore its href="music-lovers.html", and remove the
+     .coming-soon-pill span below. */
+  .demo-card-disabled { opacity: .55; filter: grayscale(55%); cursor: default; }
+  .demo-card-disabled:hover { box-shadow: var(--shadow); transform: none; }
+  .coming-soon-pill {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: #E5E7EB;
+    color: #4B5563;
+    padding: 3px 9px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
   .link-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -133,7 +154,8 @@
         <span class="channel-tag rcs">RCS</span>
       </div>
     </a>
-    <a class="demo-card" href="music-lovers.html">
+    <a class="demo-card demo-card-disabled" aria-disabled="true">
+      <span class="coming-soon-pill">Coming soon</span>
       <h3>Music Lovers</h3>
       <p>A soundtrack-sharing assistant: connect your Spotify (or just pick a genre) and get a hand-picked track from Henry's own playlists, sent straight to WhatsApp with its official clip.</p>
       <div class="channel-tags">
