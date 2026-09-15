@@ -462,6 +462,7 @@
   <span class="brand">Vonage AI Demos</span>
   <a href="index.html">Home</a>
   <a href="demo.html" class="active">Try a Demo</a>
+  <a href="music-lovers.html">Music Lovers</a>
   <a href="logs.html">Logs</a>
   <a href="architecture.html">How it works</a>
 </nav>
@@ -744,6 +745,28 @@
       // demo's own "you won a prize" WhatsApp Flow result rather than
       // Drive's generic thumbnail.
       posterImage: 'assets/ticketing-whatsapp-video-poster.jpg',
+    },
+    {
+      id: 'henry-music-lovers',
+      label: 'Music Lovers (WhatsApp)',
+      family: 'music-lovers',
+      familyLabel: 'Music Lovers',
+      channel: 'whatsapp',
+      // Shares the same WABA number as the rest of the portfolio (see
+      // Real Estate/Ticketing above) — the backend tells this demo apart
+      // by the greeting text below, which must keep saying "Music Lovers"
+      // (see websocketcalls/lib/demoRouter.js). Matches the greeting
+      // music-lovers.html's own Spotify-connect page sends, so a visitor
+      // ends up in the same flow either way.
+      wabaNumber: '447520691413',
+      greeting: (name) => `Hi, Im ${name} — Welcome to Music Lovers demo!`,
+      description: 'A soundtrack-sharing assistant: pick a genre on WhatsApp (or connect Spotify on its own page for an instant match) and get a hand-picked track from Henry\'s own playlists sent straight back to the chat, with its official clip and an AI-generated ringtone.',
+      highlights: [
+        'Personalised song pick from Henry\'s own Spotify playlists, matched to your chosen genre',
+        'Official track clip plus an AI-generated ringtone sent alongside the pick',
+        'WhatsApp Calling — ring in and hear an intro of your matched track before the AI agent picks up',
+        'Optional Spotify Connect for instant genre matching — see the dedicated Music Lovers page',
+      ],
     },
     // {
     //   id: 'next-demo-id',
