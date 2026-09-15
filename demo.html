@@ -930,6 +930,34 @@
       // genre-picker prompt) rather than a generic frame from the video.
       posterImage: 'assets/music-lovers-whatsapp-video-poster.jpg',
     },
+    {
+      id: 'henry-music-lovers-rcs',
+      label: 'Music Lovers (RCS)',
+      family: 'music-lovers',
+      familyLabel: 'Music Lovers',
+      channel: 'rcs',
+      // Same shared RCS agent/number as Real Estate (RCS) and Ticketing
+      // (RCS) above — this demo is told apart purely by the pre-filled
+      // greeting text below (the backend keys off "music lovers" in it,
+      // see websocketcalls/lib/demoRouter.js's MUSIC_LOVERS_KEYWORD_RE,
+      // which already existed for the WhatsApp version). No separate agent
+      // to register.
+      rcsServiceId: 'henry_rcs_demo3_byrrgzuw_agent@rbm.goog',
+      botName: 'Vonage RCS Demo-Henry',
+      greeting: (name) => `Hi, Im ${name} — Welcome to Music Lovers demo!`,
+      description: 'The same soundtrack-sharing assistant as the WhatsApp version, rebuilt for RCS — pick a genre from a rich card, get a hand-picked track from Henry\'s own playlists back with tappable Spotify/YouTube chips, then explore lyrics, biography, concerts and a ringtone via suggestion chips instead of a form.',
+      highlights: [
+        'Rich cards with tappable genre, Spotify and YouTube chips — no template approval needed',
+        'Personalised song pick from Henry\'s own Spotify playlists, matched to your chosen genre',
+        '"Explore more" chip menu — lyrics, biography, concerts and an AI-generated ringtone clip',
+        'Say it\'s not for you and it\'ll try up to one more song, then suggest a (pretend) concert',
+      ],
+      // No self-hosted video yet for this channel — add videoSrc/
+      // videoCaption/posterImage here once Henry records an RCS run,
+      // matching the convention every other DEMOS entry in this array
+      // uses (see updateDemoInfo(), which only shows the video panel when
+      // demo.videoSrc is set — safe to leave unset for now).
+    },
     // {
     //   id: 'next-demo-id',
     //   label: 'Next Demo Name',
