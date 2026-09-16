@@ -1385,12 +1385,16 @@
   // invite (Henry's Sept 2026 request) — registration alone doesn't mean
   // the chat will open yet (a friend's test silently stalled here once
   // already: registered, invite never accepted, nothing on screen said
-  // why). /api/rcs-test-device/status (server.js) wraps Vonage's device
-  // capability check — the closest signal Vonage exposes for "is this
-  // number actually usable yet", but not formally confirmed by Vonage's
-  // docs to distinguish "never registered" from "registered but not yet
-  // accepted" — so the checkbox in #testerConfirm stays visible the whole
-  // time as a manual fallback in case this loop never sees a "ready".
+  // why). /api/rcs-test-device/status (server.js) lists the RCS agent's
+  // real test-device roster and checks this number's actual per-tester
+  // status ("ACCEPTED" = ready) — confirmed directly against Vonage's API
+  // (Henry tested it live), not the device-capability-check endpoint this
+  // used to describe, which turned out to answer a different question
+  // entirely (generic OS/carrier RCS support, unrelated to tester status).
+  // Only "ACCEPTED" has been observed so far for a status value, so the
+  // checkbox in #testerConfirm stays visible the whole time as a manual
+  // fallback in case a not-yet-accepted number ever returns something
+  // this loop doesn't recognize as ready.
   // Gives up auto-detecting after TESTER_POLL_MAX_ATTEMPTS seconds so an
   // abandoned tab doesn't poll forever, but leaves the manual checkbox
   // available either way.
