@@ -996,11 +996,18 @@
         '"Explore more" chip menu — lyrics, biography, concerts and an AI-generated ringtone clip',
         'Say it\'s not for you and it\'ll try up to one more song, then suggest a (pretend) concert',
       ],
-      // No self-hosted video yet for this channel — add videoSrc/
-      // videoCaption/posterImage here once Henry records an RCS run,
-      // matching the convention every other DEMOS entry in this array
-      // uses (see updateDemoInfo(), which only shows the video panel when
-      // demo.videoSrc is set — safe to leave unset for now).
+      // Self-hosted, like the other three demo videos in this array —
+      // Henry's own RCS (Messages app) screen recording, downscaled/
+      // re-encoded to 720x1600 to match the rest of this array's video
+      // assets. The source recording has no audio track (Android's
+      // screen recorder doesn't capture in-app audio for this one), so
+      // unlike the WhatsApp entries this is video-only — no need for a
+      // "put sound on" caption.
+      videoSrc: 'assets/music-lovers-rcs-demo-video.mp4?v=5a65287c3c',
+      videoCaption: 'See the RCS demo in action — rich cards, suggestion chips, and a personalised track pick.',
+      // Click-to-play poster (see updateDemoInfo()) — Henry's own
+      // screenshot of this demo's opening RCS genre-picker card.
+      posterImage: 'assets/music-lovers-rcs-video-poster.jpg',
     },
     // {
     //   id: 'next-demo-id',
