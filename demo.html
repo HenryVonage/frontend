@@ -319,6 +319,14 @@
     line-height: 1.5;
     color: #7c4a03;
   }
+  .tester-steps {
+    margin: 0 0 12px;
+    padding: 0 0 0 18px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #7c4a03;
+  }
+  .tester-steps li { margin: 0 0 2px; }
   .tester-box .tester-row {
     display: flex;
     gap: 8px;
@@ -352,29 +360,56 @@
   .tester-status.ok { color: #15803d; }
   .tester-status.error { color: #b91c1c; }
   .tester-status.pending { color: #7c4a03; }
+  /* Shown while startTesterPolling() (below) is checking every second
+     whether the tester has accepted Google's SMS invite yet — gives the
+     visitor a clear "we're waiting on you" signal instead of a dead page
+     between tapping Register and the QR code appearing. */
+  .tester-polling {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #fde4bc;
+    font-size: 12.5px;
+    color: #7c4a03;
+  }
+  .tester-polling.visible { display: flex; }
+  .tester-spinner {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 2.5px solid #fde4bc;
+    border-top-color: #b45309;
+    animation: tester-spin 0.8s linear infinite;
+  }
+  @keyframes tester-spin { to { transform: rotate(360deg); } }
   .tester-confirm {
     display: none;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     margin-top: 10px;
     padding-top: 10px;
     border-top: 1px dashed #fde4bc;
   }
   .tester-confirm.visible { display: flex; }
   .tester-confirm input[type="checkbox"] {
-    /* Deliberately much larger than the label text next to it — this is
-       the one click that actually gates the QR code (see refreshDemo()),
-       so it needs to read as the primary call-to-action, not a small
-       default browser checkbox easy to skim past. */
-    width: 28px;
-    height: 28px;
+    /* Manual fallback only now — startTesterPolling() (below) auto-detects
+       invite acceptance and ticks this itself in the normal case, so this
+       no longer needs to read as the primary call-to-action the way it
+       did when it was the only signal (see refreshDemo(), still gated on
+       this checkbox either way). Sized down accordingly from its old
+       28px/primary-CTA styling. */
+    width: 18px;
+    height: 18px;
     margin: 0;
     flex-shrink: 0;
     accent-color: #92400e;
     cursor: pointer;
   }
   .tester-confirm label {
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 500;
     color: #7c4a03;
     margin: 0;
@@ -575,16 +610,25 @@
     <div id="demoInfo" class="demo-info"></div>
 
     <div id="testerBox" class="tester-box">
-      <p>This RCS agent is still in testing, not fully launched with carriers yet — Google Messages only opens a chat with it for approved test numbers. For the sake of this demo only, enter your phone number below and we'll register it as a tester before you scan.</p>
+      <p>This RCS agent is still in testing, not fully launched with carriers yet — Google Messages only opens a chat with it for approved test numbers. Three quick steps first:</p>
+      <ol class="tester-steps">
+        <li>Enter your number below and register as a tester.</li>
+        <li>Accept the SMS invite Google texts that number ("Make me a tester").</li>
+        <li>We'll detect that automatically and reveal your QR code — no need to tell us.</li>
+      </ol>
       <div class="tester-row">
         <input type="tel" id="testerPhone" placeholder="e.g. +44 7441 443052" autocomplete="tel">
         <button id="registerTesterBtn" onclick="registerTester()">Register me as a tester</button>
       </div>
       <p class="tester-format-hint">Use international format, including the country code (e.g. +44 7441 443052).</p>
       <div id="testerStatus" class="tester-status"></div>
+      <div id="testerPolling" class="tester-polling">
+        <span class="tester-spinner" aria-hidden="true"></span>
+        <span>Waiting for you to accept the SMS invite on your phone — checking every second…</span>
+      </div>
       <div id="testerConfirm" class="tester-confirm">
         <input type="checkbox" id="testerAcceptedInvite" onchange="onTesterInviteToggle()">
-        <label for="testerAcceptedInvite">Google sends an SMS invite to that number — I've opened it and tapped Accept/Yes. (Scanning won't work until this invite is accepted.)</label>
+        <label for="testerAcceptedInvite">Already accepted it but still waiting here? Tick this to continue manually.</label>
       </div>
     </div>
 
@@ -1223,6 +1267,10 @@
     // allow-listed test numbers can actually open a chat with it (see
     // registerTester() below).
     document.getElementById('testerBox').classList.toggle('visible', demo.channel === 'rcs');
+    // Switching demos/channels leaves any in-flight startTesterPolling()
+    // loop (below) polling for a phone number that may no longer even be
+    // showing — stop it here so it doesn't keep ticking in the background.
+    stopTesterPolling();
     const status = document.getElementById('testerStatus');
     const confirmRow = document.getElementById('testerConfirm');
     const acceptedBox = document.getElementById('testerAcceptedInvite');
@@ -1304,13 +1352,21 @@
         // doesn't reset acceptance on re-registration, so neither should we.
         const remembered = loadConfirmedTester();
         const alreadyConfirmed = !!(remembered && remembered.phone === phoneNumber);
-        status.textContent = alreadyConfirmed
-          ? "Registered! You already confirmed this number's SMS invite before, so you're all set."
-          : "Registered! Google will text that number an invite — open it and tap Accept, then tick the box below.";
-        status.className = 'tester-status ok';
         document.getElementById('testerAcceptedInvite').checked = alreadyConfirmed;
-        confirmRow.classList.add('visible');
-        refreshDemo();
+        if (alreadyConfirmed) {
+          status.textContent = "Registered! You already confirmed this number's SMS invite before, so you're all set.";
+          status.className = 'tester-status ok';
+          confirmRow.classList.add('visible');
+          refreshDemo();
+        } else {
+          // Don't yet know whether the invite's been accepted — start
+          // polling for it (see startTesterPolling below) instead of just
+          // asking the visitor to remember to tick the box themselves.
+          status.textContent = 'Registered! Google is texting that number an invite now — accept it on your phone and we\'ll pick that up automatically.';
+          status.className = 'tester-status pending';
+          confirmRow.classList.add('visible'); // manual fallback stays reachable the whole time
+          startTesterPolling(phoneNumber);
+        }
       } else {
         console.warn('RCS test-device registration failed:', data);
         status.textContent = `Could not register that number (${data.error || res.status}). Check the number and try again, or ask Henry to add it manually.`;
@@ -1322,6 +1378,69 @@
     } finally {
       btn.disabled = false;
     }
+  }
+
+  // Polls the backend once a second to detect the moment a freshly
+  // registered number actually accepts Google's SMS "make me a tester"
+  // invite (Henry's Sept 2026 request) — registration alone doesn't mean
+  // the chat will open yet (a friend's test silently stalled here once
+  // already: registered, invite never accepted, nothing on screen said
+  // why). /api/rcs-test-device/status (server.js) wraps Vonage's device
+  // capability check — the closest signal Vonage exposes for "is this
+  // number actually usable yet", but not formally confirmed by Vonage's
+  // docs to distinguish "never registered" from "registered but not yet
+  // accepted" — so the checkbox in #testerConfirm stays visible the whole
+  // time as a manual fallback in case this loop never sees a "ready".
+  // Gives up auto-detecting after TESTER_POLL_MAX_ATTEMPTS seconds so an
+  // abandoned tab doesn't poll forever, but leaves the manual checkbox
+  // available either way.
+  let testerPollTimer = null;
+  const TESTER_POLL_INTERVAL_MS = 1000;
+  const TESTER_POLL_MAX_ATTEMPTS = 180; // ~3 minutes
+
+  function stopTesterPolling() {
+    if (testerPollTimer) {
+      clearInterval(testerPollTimer);
+      testerPollTimer = null;
+    }
+    document.getElementById('testerPolling').classList.remove('visible');
+  }
+
+  function startTesterPolling(phoneNumber) {
+    stopTesterPolling();
+    document.getElementById('testerPolling').classList.add('visible');
+    let attempts = 0;
+
+    const poll = async () => {
+      attempts += 1;
+      try {
+        const res = await fetch(`${API_BASE}/api/rcs-test-device/status?phone=${encodeURIComponent(phoneNumber)}`);
+        const data = await res.json().catch(() => ({}));
+        if (data.ready) {
+          stopTesterPolling();
+          document.getElementById('testerAcceptedInvite').checked = true;
+          saveConfirmedTester(phoneNumber);
+          const status = document.getElementById('testerStatus');
+          status.textContent = "You're in! We detected your accepted invite — scan away.";
+          status.className = 'tester-status ok';
+          refreshDemo();
+          return;
+        }
+      } catch (err) {
+        console.warn('RCS tester status check failed:', err.message);
+        // Keep polling — a transient network blip shouldn't give up on
+        // detecting acceptance for the rest of the wait.
+      }
+      if (attempts >= TESTER_POLL_MAX_ATTEMPTS) {
+        stopTesterPolling();
+        const status = document.getElementById('testerStatus');
+        status.textContent = "Still waiting to detect your accepted invite — if you've already tapped Accept, tick the box below to continue manually.";
+        status.className = 'tester-status pending';
+      }
+    };
+
+    poll();
+    testerPollTimer = setInterval(poll, TESTER_POLL_INTERVAL_MS);
   }
 
   // Remembers, in this browser only, which phone number has already
@@ -1361,6 +1480,10 @@
   function onTesterInviteToggle() {
     const checkbox = document.getElementById('testerAcceptedInvite');
     const phone = document.getElementById('testerPhone').value.trim();
+    // A manual tick/untick is a deliberate override of whatever
+    // startTesterPolling() (above) was still waiting on — stop it so it
+    // doesn't later overwrite what the visitor just told us.
+    stopTesterPolling();
     if (checkbox.checked && phone) {
       saveConfirmedTester(phone);
     } else if (!checkbox.checked) {
