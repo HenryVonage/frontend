@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Logs — Vonage AI Demos</title>
 <link rel="stylesheet" href="site.css">
+<script src="site.js"></script>
 <style>
   main { max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
   h1 { font-size: 26px; margin-bottom: 6px; }
@@ -76,6 +77,64 @@
     border-radius: 6px;
     margin-top: 16px;
   }
+  .logs-gate {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 6px;
+  }
+  .logs-gate .field-wrap { flex: 1 1 240px; }
+  .logs-gate label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--navy-dark);
+    margin-bottom: 6px;
+  }
+  .logs-gate input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px 12px;
+    border: 1px solid #d7deee;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .logs-gate button {
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .logs-gate button:hover { background: var(--navy-dark); }
+  .gate-error {
+    font-size: 13px;
+    color: #b42318;
+    margin: 4px 0 14px;
+    min-height: 1em;
+  }
+  .change-number-row {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .change-number-row a { color: var(--navy); cursor: pointer; text-decoration: underline; }
+  .admin-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    background: #fde8d7;
+    color: #9a4b0a;
+    padding: 3px 8px;
+    border-radius: 5px;
+    margin-bottom: 12px;
+  }
 </style>
 </head>
 <body>
@@ -89,16 +148,32 @@
 </nav>
 
 <main>
-  <h1>Watch the demo's activity live</h1>
-  <p class="lead">Every inbound message, marker decision, outbound send, and call event streams here in real time — no login required.</p>
+  <h1>Watch your demo activity live</h1>
+  <p class="lead" id="pageLead">Enter the WhatsApp or RCS number you used to try a demo, and every inbound message, marker decision, outbound send, and call event for that number streams here in real time — no login required.</p>
 
   <div class="card">
     <div class="card-head">
-      <h2 style="margin:0;">Live activity feed</h2>
-      <span id="feedStatus">Connecting…</span>
+      <h2 style="margin:0;">Activity feed</h2>
+      <span id="feedStatus">Enter your number to start</span>
     </div>
-    <div class="terminal" id="liveFeed">Waiting for activity…</div>
-    <div class="privacy-note">Phone numbers are redacted server-side before they ever reach this page (e.g. <code>447•••1413</code>) — nothing sensitive is exposed publicly.</div>
+
+    <span class="admin-badge" id="adminBadge" style="display:none;">Admin view — all visitors</span>
+
+    <form id="logsGateForm" class="logs-gate">
+      <div class="field-wrap">
+        <label for="logsPhone">Your WhatsApp / RCS number</label>
+        <input type="tel" id="logsPhone" placeholder="e.g. +44 7441 443052" autocomplete="tel">
+      </div>
+      <button type="submit">Show my activity</button>
+    </form>
+    <p class="gate-error" id="logsGateError"></p>
+
+    <p class="change-number-row" id="changeNumberRow" style="display:none;">
+      Showing activity for <strong id="shownNumber"></strong> — <a id="changeNumberLink">not you? change number</a>
+    </p>
+
+    <div class="terminal" id="liveFeed" style="display:none;">Waiting for activity…</div>
+    <div class="privacy-note" id="privacyNote">Only activity tied to the number you enter is shown here — not other visitors'. Phone numbers are also redacted within the messages themselves (e.g. <code>447•••1413</code>).</div>
   </div>
 
   <div class="card">
@@ -116,6 +191,7 @@
     <h2>Full, unredacted logs (site owner only)</h2>
     <p style="font-size: 13.5px; color: var(--muted);">Deploy history, raw payloads, and errors — requires your own Render login.</p>
     <a class="dashboard-btn" href="https://dashboard.render.com" target="_blank" rel="noopener">Open Render Dashboard →</a>
+    <p style="font-size: 13.5px; color: var(--muted); margin-top: 16px;">Or, to see every visitor's redacted activity right on this page instead of just your own, open this URL with your admin token appended: <code>logs.html?admin_token=&lt;your ADMIN_TOKEN&gt;</code>.</p>
   </div>
 </main>
 
@@ -127,7 +203,26 @@
 
   const feedEl = document.getElementById('liveFeed');
   const statusEl = document.getElementById('feedStatus');
+  const gateForm = document.getElementById('logsGateForm');
+  const gateError = document.getElementById('logsGateError');
+  const phoneInput = document.getElementById('logsPhone');
+  const changeNumberRow = document.getElementById('changeNumberRow');
+  const changeNumberLink = document.getElementById('changeNumberLink');
+  const shownNumberEl = document.getElementById('shownNumber');
+  const adminBadge = document.getElementById('adminBadge');
+  const pageLead = document.getElementById('pageLead');
+  const privacyNote = document.getElementById('privacyNote');
   const tagClass = { inbound: 'tag-in', decision: 'tag-decision', outbound: 'tag-out', call: 'tag-call', dlr: 'tag-dlr' };
+
+  // Sept 2026 (Henry): this page used to poll /api/logs with no scoping at
+  // all — every visitor's activity, live, to anyone who opened the URL.
+  // Now it only starts polling once a visitor enters their OWN number
+  // (below), and the backend only ever returns events tied to that number
+  // (see server.js's /api/logs and lib/activityLog.js's getEventsForPhone).
+  // The one exception is ?admin_token=<ADMIN_TOKEN> in this page's own URL,
+  // which unlocks the full unredacted-phone-digits feed for the site
+  // owner — same admin token used by the other diagnostic routes.
+  const adminToken = new URLSearchParams(location.search).get('admin_token');
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -157,9 +252,16 @@
       .join('\n');
   }
 
+  let currentPhone = '';
+
+  function buildLogsUrl() {
+    if (adminToken) return `${API_BASE}/api/logs?admin_token=${encodeURIComponent(adminToken)}`;
+    return `${API_BASE}/api/logs?phone=${encodeURIComponent(currentPhone)}`;
+  }
+
   async function pollLogs() {
     try {
-      const res = await fetch(`${API_BASE}/api/logs`, { cache: 'no-store' });
+      const res = await fetch(buildLogsUrl(), { cache: 'no-store' });
       if (!res.ok) throw new Error('status ' + res.status);
       const data = await res.json();
       renderFeed(data.events || []);
@@ -179,6 +281,7 @@
   let pollTimer = null;
   function startPolling() {
     if (pollTimer) return;
+    lastEventsKey = ''; // force a re-render on the next poll after a number/mode change
     pollLogs();
     pollTimer = setInterval(pollLogs, 4000);
   }
@@ -189,10 +292,50 @@
   }
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) stopPolling();
-    else startPolling();
+    else if (adminToken || currentPhone) startPolling();
   });
 
-  if (!document.hidden) startPolling();
+  function showFeedFor(label) {
+    gateForm.style.display = 'none';
+    gateError.textContent = '';
+    changeNumberRow.style.display = adminToken ? 'none' : 'flex';
+    shownNumberEl.textContent = label;
+    feedEl.style.display = 'block';
+    feedEl.textContent = 'Waiting for activity…';
+    startPolling();
+  }
+
+  if (adminToken) {
+    // Owner view: skip the number gate entirely, show everything.
+    adminBadge.style.display = 'inline-block';
+    pageLead.textContent = 'Admin view — every visitor\'s redacted activity across all demos streams here in real time.';
+    privacyNote.textContent = 'Phone numbers are still redacted in every message (e.g. 447•••1413) — this admin view only removes the per-visitor scoping, not the redaction.';
+    showFeedFor('everyone (admin view)');
+  } else {
+    gateForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const raw = phoneInput.value.trim();
+      if (!raw) {
+        gateError.textContent = 'Enter your WhatsApp or RCS number to continue.';
+        return;
+      }
+      if (!isValidInternationalPhone(raw)) {
+        gateError.textContent = 'Enter your number in international format, including the country code (e.g. +44 7441 443052).';
+        return;
+      }
+      currentPhone = raw;
+      showFeedFor(raw);
+    });
+
+    changeNumberLink.addEventListener('click', () => {
+      stopPolling();
+      currentPhone = '';
+      feedEl.style.display = 'none';
+      changeNumberRow.style.display = 'none';
+      gateForm.style.display = 'flex';
+      phoneInput.focus();
+    });
+  }
 </script>
 
 </body>
