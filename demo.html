@@ -669,7 +669,7 @@
         <span class="ml-badge-soon">Limited access</span>
         <span class="ml-path-label">Connect your Spotify</span>
       </div>
-      <p class="ml-collect-note">Reads your top artists for an instant genre match instead of picking one on WhatsApp — and, if you like, builds you a personal DJ mix from your own playlists — chilled, house party, madness, workout or motivational, 30 to 90 minutes. Live preview, approved testers only for now.</p>
+      <p class="ml-collect-note">Reads your top artists for an instant genre match instead of picking one on WhatsApp — and, if you like, builds you a personal DJ mix — from your own playlists, or from Henry's library if you'd rather not sign in to Spotify — chilled, house party, madness, workout or motivational, 30 to 90 minutes. Reading your own Spotify is a live preview, approved testers only for now.</p>
 
       <div class="ml-field-group">
         <label for="mlWaNumber">Your WhatsApp number</label>
@@ -684,6 +684,14 @@
             <small>We read your playlists, work out each track's tempo and key, order them so every transition mixes cleanly, save the result as a private playlist on your Spotify, and send a 2-minute beat-matched teaser to WhatsApp. Takes a minute or two. Tempo &amp; key data partly from <a href="https://getsongbpm.com" target="_blank" rel="noopener">GetSongBPM</a>.</small>
           </label>
           <div class="ml-mix-options">
+            <div>
+              <p class="ml-mix-q">Where should the tracks come from?</p>
+              <div class="ml-chipset" id="mlMixSource">
+                <input type="radio" name="mlMixSource" id="mlSrcOwn" value="own" checked><label for="mlSrcOwn">🎧 My own Spotify library</label>
+                <input type="radio" name="mlMixSource" id="mlSrcHenry" value="henry"><label for="mlSrcHenry">🎚️ Henry's library</label>
+              </div>
+              <p class="ml-collect-note ml-src-note" id="mlSrcNote" style="margin-top:6px;"></p>
+            </div>
             <div>
               <p class="ml-mix-q">What kind of mix?</p>
               <div class="ml-chipset" id="mlMixVibe">
@@ -708,10 +716,10 @@
 
       <button class="ml-btn-spotify" id="mlSpotifyConnectBtn" type="button">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 10.5c5-1.4 10.2-1 14.5 1.3M5 14.3c4.2-1.1 8.6-.8 12.2 1.1M6 17.8c3.4-.8 6.9-.6 9.8.9" stroke="#04170B" stroke-width="2.1" stroke-linecap="round"/></svg>
-        Share your Spotify playlists
+        <span id="mlSpotifyConnectLabel">Share your Spotify playlists</span>
       </button>
 
-      <div class="ml-field-group">
+      <div class="ml-field-group" id="mlTesterEmailGroup">
         <label for="mlTesterEmail">Your email (optional)</label>
         <input class="ml-field" type="email" id="mlTesterEmail" placeholder="e.g. henry@vonage.com" autocomplete="email">
         <p class="ml-collect-note" style="margin-top:6px;">This is a live developer preview — Spotify only lets in accounts we've approved by hand. Add your email so we can grant you access (usually within minutes); leave it blank only if you already know you've been approved.</p>
@@ -734,7 +742,7 @@
         <div class="ml-step">
           <span class="ml-num">2</span>
           <h4>Track lands on WhatsApp</h4>
-          <p>One song, matched to your genre, plus its official clip and an AI-generated ringtone — sent straight back to the same conversation. With the mix option on, a harmonically mixed playlist in the vibe and length you chose, its arc as an image, and a beat-matched teaser follow a minute later.</p>
+          <p>One song, matched to your genre, plus its official clip and an AI-generated ringtone — sent straight back to the same conversation. With the mix option on, a harmonically mixed playlist in the vibe and length you chose — from your library or Henry's — its arc as an image, and a beat-matched teaser follow a minute later.</p>
         </div>
         <div class="ml-step">
           <span class="ml-num">3</span>
@@ -1791,8 +1799,11 @@
     // consolidation made possible over the old separate-page version.
     const name = document.getElementById('firstName').value.trim();
     const waNumber = document.getElementById('mlWaNumber').value.trim();
-    const email = document.getElementById('mlTesterEmail').value.trim();
     const consent = document.getElementById('mlSpotifyConsent').checked;
+    const mixOn = document.getElementById('mlMixOptIn').checked;
+    const fromHenry = mixOn && mlMixSource() === 'henry';
+    // No Spotify sign-in on the Henry path, so no tester email either.
+    const email = fromHenry ? '' : document.getElementById('mlTesterEmail').value.trim();
 
     if (!name) {
       document.getElementById('firstName').focus();
@@ -1816,6 +1827,34 @@
     }
     if (!consent) {
       mlShowStatus('Please tick the consent checkbox to continue.', 'error');
+      return;
+    }
+
+    // "Henry's library": nothing of the visitor's is read, so there's no
+    // Spotify consent screen to go through — websocketcalls plans the
+    // set from Henry's playlists with his own stored token and the
+    // playlist lands on his account (lib/ownerLibrary.js). Just a POST,
+    // then the four WhatsApp messages follow within a minute.
+    if (fromHenry) {
+      const vibe = document.querySelector('input[name="mlMixVibe"]:checked');
+      const duration = document.querySelector('input[name="mlMixDuration"]:checked');
+      const btn = document.getElementById('mlSpotifyConnectBtn');
+      btn.disabled = true;
+      mlShowStatus("Asking Henry's record crate…", 'success');
+      fetch(`${API_BASE}/api/music-lovers/henry-mix`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone: waNumber, vibe: vibe ? vibe.value : 'houseparty', duration: duration ? duration.value : '60' }),
+      })
+        .then(async (res) => {
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+          mlShowStatus(`On it! Check WhatsApp — your ${data.durationMin}-minute mix from Henry's library, its arc and a beat-matched teaser will land in a minute or two. 🎛️`, 'success');
+        })
+        .catch((err) => {
+          mlShowStatus(err.message || 'Something went wrong — please try again.', 'error');
+        })
+        .finally(() => { btn.disabled = false; });
       return;
     }
 
@@ -1854,11 +1893,26 @@
   const mlConsentLabel = document.getElementById('mlSpotifyConsentLabel');
   const mlConsentMix = mlConsentLabel.textContent;
   const mlConsentReadOnly = 'I agree Vonage can read my Spotify top artists to match a genre. Read-only access — nothing is posted, changed, or kept, and I can revoke it anytime in Spotify settings.';
-  const mlSyncConsentText = () => { mlConsentLabel.textContent = document.getElementById('mlMixOptIn').checked ? mlConsentMix : mlConsentReadOnly; };
+  const mlConsentHenry = "I agree Vonage can send my mix to this WhatsApp number. Nothing of mine is read — the tracks come from Henry's Spotify and the playlist is saved on his account, shared with me by link.";
+  const mlMixSource = () => {
+    const src = document.querySelector('input[name="mlMixSource"]:checked');
+    return src ? src.value : 'own';
+  };
+  const mlSyncConsentText = () => {
+    const mixOn = document.getElementById('mlMixOptIn').checked;
+    const fromHenry = mixOn && mlMixSource() === 'henry';
+    mlConsentLabel.textContent = fromHenry ? mlConsentHenry : mixOn ? mlConsentMix : mlConsentReadOnly;
+    document.getElementById('mlSpotifyConnectLabel').textContent = fromHenry ? "Build my mix from Henry's library" : 'Share your Spotify playlists';
+    document.getElementById('mlTesterEmailGroup').style.display = fromHenry ? 'none' : '';
+    document.getElementById('mlSrcNote').textContent = mlMixSource() === 'henry'
+      ? "No Spotify sign-in needed: the set is planned from Henry's own playlists in the vibe you pick, and you get a link to the playlist on his account. Say hi on WhatsApp first (QR code above) so the mix can be sent there."
+      : 'Reads your playlists and saves the mix as a private playlist on your Spotify — approved testers only while the app is in preview.';
+  };
   const mlSyncMixOptions = () => {
     document.querySelector('.ml-mix-optin').classList.toggle('is-off', !document.getElementById('mlMixOptIn').checked);
   };
   document.getElementById('mlMixOptIn').addEventListener('change', () => { mlSyncConsentText(); mlSyncMixOptions(); });
+  document.querySelectorAll('input[name="mlMixSource"]').forEach((el) => el.addEventListener('change', mlSyncConsentText));
   mlSyncConsentText();
   mlSyncMixOptions();
 
