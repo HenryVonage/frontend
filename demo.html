@@ -546,6 +546,14 @@
     margin: 6px 0 0; padding: 12px 0 0; border-top: 1px dashed #eceff5; max-width: 460px;
   }
   .ml-tester-confirm input[type="checkbox"] { margin-top: 2px; flex: none; }
+  .ml-mix-optin {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin: 14px 0 0; padding: 12px 14px; border-radius: 10px; max-width: 460px;
+    background: #f3f7ff; border: 1px solid #d6e2fb;
+  }
+  .ml-mix-optin input[type="checkbox"] { margin-top: 3px; flex: none; }
+  .ml-mix-optin label { font-size: 13px; line-height: 1.5; color: var(--ink, #14213d); }
+  .ml-mix-optin label small { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
   .ml-tester-confirm label { font-size: 12.5px; line-height: 1.55; color: var(--muted); }
   .ml-connect-status { font-size: 12.5px; line-height: 1.5; margin: 10px 0 0; max-width: 460px; display: none; }
   .ml-connect-status.show { display: block; }
@@ -650,12 +658,19 @@
         <span class="ml-badge-soon">Limited access</span>
         <span class="ml-path-label">Connect your Spotify</span>
       </div>
-      <p class="ml-collect-note">Reads your top artists for an instant genre match instead of picking one on WhatsApp — live preview, approved testers only for now.</p>
+      <p class="ml-collect-note">Reads your top artists for an instant genre match instead of picking one on WhatsApp — and, if you like, builds you a personal 1-hour DJ mix from your own playlists. Live preview, approved testers only for now.</p>
 
       <div class="ml-field-group">
         <label for="mlWaNumber">Your WhatsApp number</label>
         <input class="ml-field" type="tel" id="mlWaNumber" placeholder="e.g. +44 7441 443052" autocomplete="tel">
         <p class="ml-collect-note" style="margin-top:6px;">Use international format, including the country code — this is where your matched track gets sent.</p>
+      </div>
+
+      <div class="ml-mix-optin">
+        <input type="checkbox" id="mlMixOptIn" checked>
+        <label for="mlMixOptIn">Also build me a personal 1-hour DJ mix
+          <small>We read your playlists, work out each track's tempo and key, order them so every transition mixes cleanly, save the result as a private playlist on your Spotify, and send a 2-minute beat-matched teaser to WhatsApp. Takes a minute or two. Tempo &amp; key data partly from <a href="https://getsongbpm.com" target="_blank" rel="noopener">GetSongBPM</a>.</small>
+        </label>
       </div>
 
       <button class="ml-btn-spotify" id="mlSpotifyConnectBtn" type="button">
@@ -671,7 +686,7 @@
 
       <div class="ml-tester-confirm">
         <input type="checkbox" id="mlSpotifyConsent">
-        <label for="mlSpotifyConsent">I agree Vonage can read my Spotify playlists to match a genre. Read-only access — nothing is posted, changed, or kept, and I can revoke it anytime in Spotify settings.</label>
+        <label for="mlSpotifyConsent" id="mlSpotifyConsentLabel">I agree Vonage can read my Spotify playlists to match a genre and build my mix, and can save that mix as one new private playlist on my account. Nothing else is posted or changed, nothing is kept beyond the demo, and I can revoke access anytime in Spotify settings.</label>
       </div>
 
       <p class="ml-connect-status" id="mlConnectStatus"></p>
@@ -686,7 +701,7 @@
         <div class="ml-step">
           <span class="ml-num">2</span>
           <h4>Track lands on WhatsApp</h4>
-          <p>One song, matched to your genre, plus its official clip and an AI-generated ringtone — sent straight back to the same conversation.</p>
+          <p>One song, matched to your genre, plus its official clip and an AI-generated ringtone — sent straight back to the same conversation. With the mix option on, a 1-hour harmonically mixed playlist and a beat-matched teaser follow a minute later.</p>
         </div>
         <div class="ml-step">
           <span class="ml-num">3</span>
@@ -1787,14 +1802,30 @@
 
     mlShowStatus('Redirecting you to Spotify…', 'success');
     const params = new URLSearchParams({ phone: waNumber, name });
+    // Personal DJ mix opt-in (websocketcalls' lib/musicLoversMix.js): asks
+    // Spotify for playlist read + private-playlist write on top of the
+    // top-artists read, so the consent screen the visitor sees is wider.
+    if (document.getElementById('mlMixOptIn').checked) params.set('mix', '1');
     window.location.href = `${API_BASE}/api/spotify-auth-start?${params.toString()}`;
   });
+
+  // Keep the consent sentence truthful for whichever access is actually
+  // being requested — the mix needs playlist read/write, the plain genre
+  // match is read-only top artists.
+  const mlConsentLabel = document.getElementById('mlSpotifyConsentLabel');
+  const mlConsentMix = mlConsentLabel.textContent;
+  const mlConsentReadOnly = 'I agree Vonage can read my Spotify top artists to match a genre. Read-only access — nothing is posted, changed, or kept, and I can revoke it anytime in Spotify settings.';
+  const mlSyncConsentText = () => { mlConsentLabel.textContent = document.getElementById('mlMixOptIn').checked ? mlConsentMix : mlConsentReadOnly; };
+  document.getElementById('mlMixOptIn').addEventListener('change', mlSyncConsentText);
+  mlSyncConsentText();
 
   // Landed back here from /api/spotify-callback — show what happened.
   // (The backend already sent the matched track over WhatsApp by the time
   // this fires on a "connected" result — this is just the on-page echo.)
   const mlSpotifyResult = new URLSearchParams(window.location.search).get('spotify');
-  if (mlSpotifyResult === 'connected') {
+  if (mlSpotifyResult === 'connected-mix') {
+    mlShowStatus('Connected! Check WhatsApp — your matched track is on its way, and your personal 1-hour mix will follow in a minute or two. 🎛️', 'success');
+  } else if (mlSpotifyResult === 'connected') {
     mlShowStatus('Connected! Check WhatsApp — your matched track is on its way. 🎧', 'success');
   } else if (mlSpotifyResult === 'denied') {
     mlShowStatus("No worries — you didn't grant access, so nothing was read. Pick a genre on WhatsApp instead (above).", 'error');
