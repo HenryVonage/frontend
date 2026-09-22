@@ -681,7 +681,7 @@
         <input type="checkbox" id="mlMixOptIn" checked>
         <div style="flex:1;min-width:0;">
           <label for="mlMixOptIn">Also build me a personal DJ mix
-            <small>We read your playlists, work out each track's tempo and key, order them so every transition mixes cleanly, save the result as a private playlist on your Spotify, and send a 2-minute beat-matched teaser to WhatsApp. Takes a minute or two. Tempo &amp; key data partly from <a href="https://getsongbpm.com" target="_blank" rel="noopener">GetSongBPM</a>.</small>
+            <small>We take each track's tempo and key, order them so every transition mixes cleanly (Camelot wheel), save the result as a Spotify playlist and send you the set sheet plus its "arc" chart on WhatsApp. Turn on Crossfade in Spotify and it plays as one continuous mix. Takes about a minute.</small>
           </label>
           <div class="ml-mix-options">
             <div>
@@ -742,7 +742,7 @@
         <div class="ml-step">
           <span class="ml-num">2</span>
           <h4>Track lands on WhatsApp</h4>
-          <p>One song, matched to your genre, plus its official clip and an AI-generated ringtone — sent straight back to the same conversation. With the mix option on, a harmonically mixed playlist in the vibe and length you chose — from your library or Henry's — its arc as an image, and a beat-matched teaser follow a minute later.</p>
+          <p>One song, matched to your genre, plus its official clip and an AI-generated ringtone — sent straight back to the same conversation. With the mix option on, a harmonically mixed playlist in the vibe and length you chose — from your library or Henry's — and its arc as an image follow a minute later — play it with Spotify's Crossfade on for a seamless set.</p>
         </div>
         <div class="ml-step">
           <span class="ml-num">3</span>
@@ -1849,7 +1849,7 @@
         .then(async (res) => {
           const data = await res.json().catch(() => ({}));
           if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
-          mlShowStatus(`On it! Check WhatsApp — your ${data.durationMin}-minute mix from Henry's library, its arc and a beat-matched teaser will land in a minute or two. 🎛️`, 'success');
+          mlShowStatus(`On it! Check WhatsApp — your ${data.durationMin}-minute mix from Henry's library and its arc chart will land in a minute. 🎛️`, 'success');
         })
         .catch((err) => {
           mlShowStatus(err.message || 'Something went wrong — please try again.', 'error');
