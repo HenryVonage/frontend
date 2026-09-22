@@ -514,6 +514,29 @@
   .ml-hero-caption h2 { margin: 0 0 2px; font-size: 19px; font-weight: 700; }
   .ml-hero-caption p { margin: 0; font-size: 12.5px; color: #E4E8F5; }
 
+  /* "Two parts" strip at the top of the Music Lovers card — so a visitor
+     sees the DJ-mix half of the demo before scrolling past the QR code. */
+  .ml-parts { display: none; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 12px; }
+  .ml-parts.visible { display: grid; }
+  .ml-part { display: block; text-decoration: none; border: 1px solid #e3e6ee; border-radius: 12px; padding: 12px 14px; background: #fff; color: var(--ink, #14213d); transition: border-color .15s, box-shadow .15s; }
+  .ml-part:hover { border-color: #b9c2d6; box-shadow: 0 2px 10px rgba(20,33,61,.08); }
+  .ml-part-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: #14213d; color: #fff; font-size: 12px; font-weight: 800; margin-right: 8px; }
+  .ml-part b { font-size: 14px; }
+  .ml-part small { display: block; margin-top: 6px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+  .ml-part.accent { background: #14213d; border-color: #14213d; color: #fff; }
+  .ml-part.accent .ml-part-num { background: #4f7be8; }
+  .ml-part.accent small { color: #c7d0e4; }
+  .ml-part.accent:hover { border-color: #4f7be8; }
+  @media (max-width: 560px) { .ml-parts { grid-template-columns: 1fr; } }
+  /* Part 2 header + feature list */
+  .ml-mix-head { margin: 8px 0 18px; padding-top: 22px; border-top: 1px solid #eceff5; scroll-margin-top: 16px; }
+  .ml-part-badge { display: inline-block; background: #4f7be8; color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; margin-bottom: 8px; }
+  .ml-mix-head h3 { margin: 0 0 6px; font-size: 20px; color: var(--navy-dark); }
+  .ml-mix-head p { margin: 0 0 10px; color: var(--muted); font-size: 14px; line-height: 1.55; }
+  .ml-feature-list { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 6px; }
+  .ml-feature-list li { position: relative; padding-left: 26px; font-size: 13.5px; line-height: 1.5; color: var(--ink, #14213d); }
+  .ml-feature-list li::before { content: "✓"; position: absolute; left: 0; top: 0; width: 18px; height: 18px; border-radius: 50%; background: #dcfce7; color: #15803d; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+  .ml-chat-tip { background: #f5f7fb; border-radius: 10px; padding: 10px 12px; font-size: 13px; color: var(--ink, #14213d); }
   .ml-extras { display: none; }
   .ml-extras.visible { display: block; }
   .ml-or-row { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin: 4px 0 18px; }
@@ -628,6 +651,17 @@
 
     <div id="demoInfo" class="demo-info"></div>
 
+    <div id="mlParts" class="ml-parts">
+      <a class="ml-part" href="#result">
+        <span class="ml-part-num">1</span><b>Get a matched track</b>
+        <small>Scan the QR code, pick a genre in the chat — one song from Henry's playlists comes back with its official clip and an AI ringtone.</small>
+      </a>
+      <a class="ml-part accent" href="#mlMixSection">
+        <span class="ml-part-num">2</span><b>Build your own DJ mix ↓</b>
+        <small>30, 60 or 90 minutes, harmonically mixed from Henry's library or yours, saved as a Spotify playlist and sent to your chat. No sign-in needed.</small>
+      </a>
+    </div>
+
     <div id="testerBox" class="tester-box">
       <p>This RCS agent is still in testing, not fully launched with carriers yet — Google Messages only opens a chat with it for approved test numbers. Three quick steps first:</p>
       <ol class="tester-steps">
@@ -664,12 +698,19 @@
     </div>
 
     <div id="mlExtras" class="ml-extras">
-      <div class="ml-or-row">or</div>
-      <div class="ml-eyebrow-row">
-        <span class="ml-badge-soon">Limited access</span>
-        <span class="ml-path-label">Connect your Spotify</span>
+      <div class="ml-mix-head" id="mlMixSection">
+        <span class="ml-part-badge">Part 2</span>
+        <h3>Build your own DJ mix</h3>
+        <p>Pick a vibe and a length, and the demo plans a real DJ set — not a shuffled playlist — then delivers it to your WhatsApp or RCS conversation.</p>
+        <ul class="ml-feature-list">
+          <li><b>Harmonically mixed:</b> every transition is key-compatible (Camelot wheel) and the tempo follows a club arc — warm-up, build, peak, landing.</li>
+          <li><b>Five vibes, three lengths:</b> chilled, house party, madness, workout or motivational — 30, 60 or 90 minutes.</li>
+          <li><b>Two sources:</b> Henry's own record crate (no sign-in), or your own Spotify library (approved testers — the app is in Spotify's preview mode).</li>
+          <li><b>What you get:</b> a Spotify playlist in set order, the set sheet (start time · track · BPM · key) and an "arc" chart of the set, all in the chat. Turn on Spotify's Crossfade and it plays as one continuous mix.</li>
+          <li><b>Spotify only:</b> tempo and key come from Spotify's own track data; nothing else is downloaded or scraped.</li>
+        </ul>
+        <div class="ml-chat-tip">💬 Prefer to stay in the chat? Just type <b>"mix"</b> — e.g. <i>"a 30 min chilled mix"</i> or <i>"workout mix for an hour"</i> — in the WhatsApp or RCS conversation you started in part 1.</div>
       </div>
-      <p class="ml-collect-note">Reads your top artists for an instant genre match instead of picking one on WhatsApp — and, if you like, builds you a personal DJ mix — from your own playlists, or from Henry's library if you'd rather not sign in to Spotify — chilled, house party, madness, workout or motivational, 30 to 90 minutes. Reading your own Spotify is a live preview, approved testers only for now.</p>
 
       <div class="ml-field-group">
         <label for="mlWaNumber">Your WhatsApp number</label>
@@ -680,7 +721,7 @@
       <div class="ml-mix-optin">
         <input type="checkbox" id="mlMixOptIn" checked>
         <div style="flex:1;min-width:0;">
-          <label for="mlMixOptIn">Also build me a personal DJ mix
+          <label for="mlMixOptIn">Build my personal DJ mix
             <small>We take each track's tempo and key, order them so every transition mixes cleanly (Camelot wheel), save the result as a Spotify playlist and send you the set sheet plus its "arc" chart on WhatsApp. Turn on Crossfade in Spotify and it plays as one continuous mix. Takes about a minute.</small>
           </label>
           <div class="ml-mix-options">
@@ -732,7 +773,7 @@
 
       <p class="ml-connect-status" id="mlConnectStatus"></p>
 
-      <div class="ml-section-label">How this step fits in</div>
+      <div class="ml-section-label">How the two parts fit together</div>
       <div class="ml-steps">
         <div class="ml-step">
           <span class="ml-num">1</span>
@@ -1286,6 +1327,7 @@
     const isMusicLovers = demo.family === 'music-lovers';
     document.getElementById('mlHero').classList.toggle('visible', isMusicLovers);
     document.getElementById('mlExtras').classList.toggle('visible', isMusicLovers);
+    document.getElementById('mlParts').classList.toggle('visible', isMusicLovers);
 
     const arch = ARCH_TEXT[demo.channel] || ARCH_TEXT.whatsapp;
     document.getElementById('archCaption').textContent = arch.caption;
@@ -1906,7 +1948,7 @@
     document.getElementById('mlTesterEmailGroup').style.display = fromHenry ? 'none' : '';
     document.getElementById('mlSrcNote').textContent = mlMixSource() === 'henry'
       ? "No Spotify sign-in needed: the set is planned from Henry's own playlists in the vibe you pick, and you get a link to the playlist on his account. Say hi on WhatsApp first (QR code above) so the mix can be sent there."
-      : 'Reads your playlists and saves the mix as a private playlist on your Spotify — approved testers only while the app is in preview.';
+      : 'Connect your Spotify (limited access — approved testers only while the app is in preview): reads your playlists and top artists, saves the mix as a private playlist on your account, and matches a genre for part 1 automatically.';
   };
   const mlSyncMixOptions = () => {
     document.querySelector('.ml-mix-optin').classList.toggle('is-off', !document.getElementById('mlMixOptIn').checked);
