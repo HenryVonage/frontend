@@ -728,8 +728,8 @@
             <div>
               <p class="ml-mix-q">Where should the tracks come from?</p>
               <div class="ml-chipset" id="mlMixSource">
-                <input type="radio" name="mlMixSource" id="mlSrcOwn" value="own" checked><label for="mlSrcOwn">🎧 My own Spotify library</label>
-                <input type="radio" name="mlMixSource" id="mlSrcHenry" value="henry"><label for="mlSrcHenry">🎚️ Henry's library</label>
+                <input type="radio" name="mlMixSource" id="mlSrcHenry" value="henry" checked><label for="mlSrcHenry">🎚️ Henry's library</label>
+                <input type="radio" name="mlMixSource" id="mlSrcOwn" value="own"><label for="mlSrcOwn">🎧 My own Spotify library</label>
               </div>
               <p class="ml-collect-note ml-src-note" id="mlSrcNote" style="margin-top:6px;"></p>
             </div>
@@ -1053,12 +1053,12 @@
       // ends up in the same flow either way.
       wabaNumber: '447520691413',
       greeting: (name) => `Hi, Im ${name} — Welcome to Music Lovers demo!`,
-      description: 'A soundtrack-sharing assistant: pick a genre on WhatsApp (or connect Spotify on its own page for an instant match) and get a hand-picked track from Henry\'s own playlists sent straight back to the chat, with its official clip and an AI-generated ringtone.',
+      description: 'A soundtrack-sharing assistant in two parts: pick a genre on WhatsApp and get a hand-picked track from Henry\'s own playlists sent straight back to the chat, with its official clip and an AI-generated ringtone — then ask for a whole DJ mix, harmonically mixed in the vibe and length you choose, delivered as a Spotify playlist.',
       highlights: [
         'Personalised song pick from Henry\'s own Spotify playlists, matched to your chosen genre',
         'Official track clip plus an AI-generated ringtone sent alongside the pick',
         'WhatsApp Calling — ring in and hear an intro of your matched track before the AI agent picks up',
-        'Optional Spotify Connect for instant genre matching — see the dedicated Music Lovers page',
+        'Personal DJ mix (part 2 below, or just type "mix" in the chat): 30–90 minutes, key- and tempo-matched, saved as a Spotify playlist with its set sheet and arc chart',
       ],
       // Self-hosted, like the other three demo videos in this array —
       // Henry's own WhatsApp screen recording, trimmed to the first 2:25
@@ -1092,6 +1092,7 @@
         'Personalised song pick from Henry\'s own Spotify playlists, matched to your chosen genre',
         '"Explore more" chip menu — lyrics, biography, concerts and an AI-generated ringtone clip',
         'Say it\'s not for you and it\'ll try up to one more song, then suggest a (pretend) concert',
+        'Personal DJ mix over RCS too (part 2 below, or just type "mix" in the chat): 30–90 minutes, key- and tempo-matched, saved as a Spotify playlist with its set sheet and arc chart',
       ],
       // Self-hosted, like the other three demo videos in this array —
       // Henry's own RCS (Messages app) screen recording, downscaled/
