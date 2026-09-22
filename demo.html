@@ -83,6 +83,21 @@
     background: #000;
     display: none;
   }
+  /* Wide screens (≥1180px): a third column on the LEFT holds the demo
+     description (+ the Music Lovers "two parts" strip), so the picker
+     card is just name → demo → channel → QR code, and the QR code sits
+     a screen-height higher. The nodes are moved between #aboutColumn
+     and #aboutSlot (inside the card) by a matchMedia listener in the
+     script — CSS alone can't re-parent them. */
+  .about-column { display: none; }
+  @media (min-width: 1180px) {
+    main { max-width: 1400px; }
+    .layout-row { gap: 24px; }
+    .about-column { display: flex; flex-direction: column; gap: 14px; flex: 0 1 340px; min-width: 280px; }
+    .about-column .demo-info { margin-bottom: 0; position: sticky; top: 20px; }
+    .about-column .ml-parts { margin: 0; grid-template-columns: 1fr; }
+    .layout-row .card { flex: 1 1 520px; max-width: 640px; }
+  }
   @media (max-width: 880px) {
     .layout-row { flex-direction: column; }
     .layout-row .card { max-width: none; width: 100%; }
@@ -638,6 +653,7 @@
   </div>
 
   <div class="layout-row">
+  <aside id="aboutColumn" class="about-column" aria-label="About this demo"></aside>
   <div class="card">
     <label for="firstName">Your first name</label>
     <input type="text" id="firstName" placeholder="e.g. Henry" autocomplete="given-name">
@@ -649,6 +665,7 @@
     <div id="channelPicker" class="channel-picker" role="group" aria-labelledby="channelPickerLabel"></div>
 
 
+    <div id="aboutSlot"></div>
     <div id="demoInfo" class="demo-info"></div>
 
     <div id="mlParts" class="ml-parts">
@@ -1835,6 +1852,25 @@
     mlStatusEl.textContent = text;
     mlStatusEl.className = `ml-connect-status show ${kind}`;
   }
+
+  // Wide layout: the description (+ Music Lovers parts strip) lives in the
+  // left column; narrow: back inside the card where it always was.
+  const aboutMq = window.matchMedia('(min-width: 1180px)');
+  function placeAbout() {
+    const info = document.getElementById('demoInfo');
+    const parts = document.getElementById('mlParts');
+    if (aboutMq.matches) {
+      const col = document.getElementById('aboutColumn');
+      col.appendChild(info);
+      col.appendChild(parts);
+    } else {
+      const slot = document.getElementById('aboutSlot');
+      slot.after(info);
+      info.after(parts);
+    }
+  }
+  aboutMq.addEventListener('change', placeAbout);
+  placeAbout();
 
   document.getElementById('mlSpotifyConnectBtn').addEventListener('click', () => {
     // Reuses the page's single #firstName field rather than asking for
